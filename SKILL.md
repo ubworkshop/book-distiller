@@ -1,11 +1,15 @@
 ---
-name: epub-to-markdown
-description: 将 EPUB 电子书按章节精确提取并切分为单层平铺的独立 Markdown 文档。支持挂载子技能（Sub-skills，如 extract-insights 提取 4 类写作黄金原料、book-review 生成多平台高赞读后感、完整血统溯源与联系图谱）、智能过滤版权与无意义杂质、自动注入 YAML Frontmatter 元数据（书名、作者、字数、阅读时长、标签）、章节底部双向连续翻页导航、提取内嵌配图与重定向相对路径，并自动生成 README.md 和 SUMMARY.md 索引目录（完美适配 Obsidian、Notion 及 GitBook）。当用户提到"提取epub"、"epub转markdown"、"epub拆分章节"、"电子书拆解"、"epub 章节导出"、"提取黄金原料"、"写读后感"、"小红书书评"、"血统溯源"、"联系图谱"等需求时触发。
+name: book-distiller
+description: Book Distiller (书籍蒸馏器) - 电子书章节拆解、黄金原料萃取与多平台书评创作引擎。将 EPUB 电子书按章节精确提取并切分为单层平铺的独立 Markdown 文档。支持挂载子技能（extract-insights 提取 4 类写作黄金原料与思维模型图谱、book-review 生成多平台高赞读后感与完整血统溯源图谱）、智能过滤版权与无意义杂质、自动注入 YAML Frontmatter 元数据、章节底部双向连续翻页导航、提取内嵌配图与重定向相对路径，并自动生成 README.md 和 SUMMARY.md 索引目录（完美适配 Obsidian、Notion 及 GitBook）。当用户提到"book-distiller"、"书籍蒸馏"、"提取epub"、"epub转markdown"、"epub拆分章节"、"电子书拆解"、"提取黄金原料"、"写读后感"、"小红书书评"、"血统溯源"等需求时触发。
 ---
 
-# EPUB 章节转 Markdown Skill (v2.7 模块化创作与溯源图谱版)
+# Book Distiller (书籍蒸馏器 v2.8)
 
-将 EPUB 电子书按章节结构自动解包、清洗，并转成一套规范的单层平铺独立 Markdown 知识库；同时向下游串联子技能流水线，实现从**书籍切分 ➔ 黄金原料挖掘 ➔ 多平台读后感生成 ➔ 完整血统溯源与联系图谱**的完整闭环。
+**从电子书章节拆解、黄金原料萃取到多平台深度创作与血统溯源的一体化引擎。**
+
+将 EPUB 电子书按章节结构自动解包、清洗，并转成一套规范的单层平铺独立 Markdown 知识库；向下游串联完整的创作者流水线，实现从**书籍切分 ➔ 4D黄金原料挖掘 ➔ 多平台读后感生成 ➔ 完整血统溯源与联系图谱**的闭环。
+
+---
 
 ## 核心架构与功能
 
@@ -25,13 +29,13 @@ description: 将 EPUB 电子书按章节精确提取并切分为单层平铺的�
 
 ```mermaid
 flowchart TD
-    EPUB[原始 EPUB 电子书] --> Main[epub-to-markdown 主技能]
+    EPUB[原始 EPUB 电子书] --> Main[Book Distiller 核心引擎]
     Main --> Chapters[单层平铺章节 Markdown]
     Chapters --> S1[Sub-skill: extract-insights]
     S1 --> Insights[insights/ 四大黄金原料总库]
     Insights --> S2[Sub-skill: book-review]
     Chapters --> S2
-    S2 --> Reviews[社交平台读后感]
+    S2 --> Reviews[多平台高赞读后感]
     S2 --> Provenance[🧬 完整血统溯源与设计联系图谱]
 ```
 
@@ -61,13 +65,13 @@ flowchart TD
 
 ```bash
 # 1. 主流程：标准平铺纯净提取 EPUB 电子书
-~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/epub-to-markdown/scripts/extract_chapters.py "<EPUB_FILE_PATH>" -o "<OUTPUT_DIR>"
+~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/book-distiller/scripts/extract_chapters.py "<EPUB_FILE_PATH>" -o "<OUTPUT_DIR>"
 
 # 2. 为已提取的书籍搭建写作原料库骨架 (extract-insights)
-~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/epub-to-markdown/scripts/extract_insights.py "<BOOK_DIR>"
+~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/book-distiller/scripts/extract_insights.py "<BOOK_DIR>"
 
 # 3. 为已提取的书籍生成社交媒体读后感与血统溯源草稿脚手架 (book-review)
-~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/epub-to-markdown/scripts/generate_review.py "<BOOK_DIR>" --platform all --topic "走出内耗"
+~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/book-distiller/scripts/generate_review.py "<BOOK_DIR>" --platform all --topic "走出内耗"
 ```
 
 ## 典型输出目录结构

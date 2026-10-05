@@ -1,13 +1,13 @@
-# epub-to-markdown
+# Book Distiller (书籍蒸馏器)
 
 > Precise chapter-by-chapter EPUB extraction to clean, flat Markdown documents with modular sub-skills (extract-insights: 4D raw materials + Obsidian graph; book-review: multi-platform high-resonance book reviews + full lineage & provenance connection graph), smart noise filtering, YAML frontmatter, image assets, and structured indexes.
 
-An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone Markdown chapters, preserving image assets and hierarchy, and building `README.md` and `SUMMARY.md` catalogs for Obsidian, Notion, or GitBook.
+An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone Markdown chapters, preserving image assets and hierarchy, building `README.md` and `SUMMARY.md` catalogs for Obsidian, Notion, or GitBook, extracting creator insights, and generating multi-platform book reviews with full design provenance.
 
 ## ✨ Features
 
 - **Strictly Flat Directory Structure**: All chapters are extracted side-by-side into a single folder. No confusing nested directories or broken relative links.
-- **Modular Sub-skills (Advanced Creator Suite v2.7)**:
+- **Modular Sub-skills (Advanced Creator Suite v2.8)**:
   - ⚡️ **`extract-insights`**: Extracts Contrarian Hooks (with 1-5 ⭐ viral ratings and 🔥 Top 5 pinned topics), Concrete Stories/Cases, Actionable Checklists, High-resonance Quotes, Obsidian Concept Graph (`[[Wikilinks]]`), and Symptom Mapping.
   - ✍️ **`book-review`**: Weaves extracted raw materials into platform-native, high-resonance book reviews (Xiaohongshu visual cards, Threads 4-post threads, WeChat in-depth essays) with a calm, empathetic, anti-preachy voice.
   - 🧬 **Full Lineage & Provenance Blueprint (完整血统溯源与联系图谱)**: Accompanying every review is a Mermaid design connection graph, a source-lineage mapping table (tying hook, painpoint, inversion, checklist, and quote back to the exact book chapter and insights card), and Obsidian concept graph wikilinks.
@@ -23,7 +23,7 @@ An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone M
 
 ```mermaid
 flowchart LR
-    EPUB[EPUB eBook] --> Main[epub-to-markdown]
+    EPUB[EPUB eBook] --> Main[Book Distiller Engine]
     Main --> Chapters[Flat Markdown Chapters]
     Chapters --> S1[Sub-skill: extract-insights]
     S1 --> Master[insights/ Master Libraries]
@@ -79,7 +79,7 @@ Clone this repository into your agent's skill directory:
 
 ```bash
 # For Antigravity / Claude Code
-git clone https://github.com/ubworkshop/epub-to-markdown.git ~/.gemini/config/skills/epub-to-markdown
+git clone https://github.com/ubworkshop/book-distiller.git ~/.gemini/config/skills/book-distiller
 ```
 
 ## 📂 Output Structure
