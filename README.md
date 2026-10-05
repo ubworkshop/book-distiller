@@ -1,12 +1,13 @@
 # epub-to-markdown
 
-> Precise chapter-by-chapter EPUB extraction to clean Markdown documents with YAML frontmatter, nested directories, image assets, and structured indexes.
+> Precise chapter-by-chapter EPUB extraction to clean Markdown documents with smart noise filtering, YAML frontmatter, nested directories, image assets, and structured indexes.
 
 An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone Markdown chapters, preserving image assets and hierarchy, and building `README.md` and `SUMMARY.md` catalogs for Obsidian, Notion, or GitBook.
 
 ## ✨ Features
 
-- **Smart Chapter Extraction**: Splits content following the EPUB Spine reading order without cutting chapters in half.
+- **Smart Chapter Extraction & Noise Filtering**: Automatically detects and skips publisher copyright pages, empty title pages, redundant in-book TOCs, and broken internal XHTML anchors. Use `--keep-all` if you prefer to retain them.
+- **Sequential Indexing**: Consecutively numbers chapters (`01_xxx.md`, `02_xxx.md`) without missing-number gaps.
 - **Nested Directory Structure (`--nested`)**: Automatically detects book parts, volumes, and sections, grouping chapters into dedicated subfolders.
 - **YAML Frontmatter Injection**: Embeds structured metadata into every chapter header (`book`, `author`, `chapter_index`, `word_count`, `read_time`, `tags`) — tailored for Obsidian and Notion property databases.
 - **Prev / Next Chapter Navigation**: Adds bidirectional `⬅️ Previous Chapter | 📑 Table of Contents | ➡️ Next Chapter` links at the bottom of every page.
@@ -26,11 +27,14 @@ An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone M
 ### 2. Manual CLI Usage
 
 ```bash
-# Standard flat extraction (creates a folder named after the book in the current directory)
+# Standard clean extraction (filters out copyright noise)
 python3 scripts/extract_chapters.py "/path/to/book.epub"
 
 # Multi-level nested directory mode (groups by Parts/Volumes)
 python3 scripts/extract_chapters.py "/path/to/book.epub" --nested
+
+# Retain all pages including publisher front/back matter
+python3 scripts/extract_chapters.py "/path/to/book.epub" --keep-all
 
 # Custom output directory
 python3 scripts/extract_chapters.py "/path/to/book.epub" -o "./my_book_notes"
@@ -67,7 +71,7 @@ Book_Notes/
 ├── Part_02_Life_Principles/
 │   ├── 03_Embrace_Reality.md
 │   └── 04_Use_the_5-Step_Process.md
-└── 00_Front_Matter.md
+└── 01_Front_Matter.md
 ```
 
 ## 📄 License
