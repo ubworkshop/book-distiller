@@ -3,6 +3,8 @@
 - **来源书籍**：{book_title}
 - **章节序号**：第 {chapter_index} 章
 - **核心论点**：{core_thesis}
+- **关联概念**：{concept_wikilinks} <!-- 例如: [[痛苦+反思=进步]] [[极度求真]] -->
+- **爆款潜力评级**：{viral_score} <!-- 例如: ⭐⭐⭐⭐⭐ (5/5) 🔥 必爆潜力 -->
 
 ---
 
@@ -11,6 +13,7 @@
 
 - **常规认知（常识误区）**：{conventional_wisdom}
 - **颠覆视角（深度洞察）**：{contrarian_insight}
+- **传播潜力解析**：{viral_rationale}
 - **社交爆款 Hook 灵感（3 种角度）**：
   1. *疑问钩子*：{hook_question}
   2. *冲突钩子*：{hook_contrast}
@@ -24,7 +27,7 @@
 - **案例名称**：{case_title}
 - **情境背景**：{case_background}
 - **核心冲突 / 阻碍**：{case_conflict}
-- **关键转折 / 动作**：{case_action}
+- **关键转折 / 破局动作**：{case_action}
 - **最终启示**：{case_takeaway}
 
 ---
@@ -32,7 +35,7 @@
 ## 3. 🛠️ 可落地微清单 (读者收藏向)
 > 读者可以直接拿去套用、执行的行动步骤、复盘清单或判断标准。
 
-- **适用场景**：{action_scenario}
+- **解决什么现实问题**：{target_problem} <!-- 对应痛点索引 -->
 - **执行法则 / 三步流程**：
   1. **第一步（识别/诊断）**：{step_1}
   2. **第二步（关键行动）**：{step_2}
@@ -52,3 +55,9 @@
 
 3. > “{quote_3}”
    *— 适用语境：{quote_3_context}*
+
+---
+
+## 5. 🎯 读者现实痛点对号入座
+- **读者搜索/提问**：“{reader_search_query}” <!-- 比如: 为什么我每天都很忙却很空虚？ -->
+- **本章给出的底层解答**：{core_solution}
