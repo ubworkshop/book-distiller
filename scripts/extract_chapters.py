@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-EPUB Chapter Extractor (v2.1 智能纯净版)
-将 EPUB 电子书按章节精确提取并切分为独立的 Markdown 文档。
-新增：
-- 智能出版冗余过滤：自动剔除纯版权声明、出版社广告、重复目录、空扉页与残注页。
-- 复合副标题自动合并：将 "Chapter 1" 与 "Leverage" 智能拼合为 "Chapter 1: Leverage"。
-- 文本深度洁癖净化：清除 xml version 残留及 xhtml 内部跳转失效锚点。
-- 连续顺次重排编号：过滤后章节重新按 01, 02... 连续命名，杜绝断号与跳号。
-- 支持多级目录嵌套模式 (--nested) 与 YAML Frontmatter 元数据注入。
+EPUB Chapter Extractor (v2.2 单层平铺纯净版)
+将 EPUB 电子书按章节提取并平铺切分为独立的 Markdown 文档。
+特性：
+- 严格单层平铺：所有章节整齐平铺在同一目录下，绝不产生层级混乱
+- 统一相对路径：图片统一引用 ./assets/xxx.png，上一章/下一章统一为 ./xx.md
+- YAML Frontmatter 元数据注入 (书名, 作者, 序号, 字数, 预估时长, 标签)
+- 章节底部 上一章 / 返回目录 / 下一章 翻页导航
+- 智能过滤版权页、空扉页、出版社广告与无效内部链接
+- 自动生成全书 README.md 和 SUMMARY.md 索引目录
 """
 
 import os
@@ -37,6 +38,27 @@ def calculate_stats(text: str) -> tuple[int, str]:
     total_words = cjk_count + non_cjk_words
     mins = max(1, round(total_words / 350))
     return total_words, f"{mins} min"
+
+def is_redundant_page(title: str, text: str) -> bool:
+    """判断是否为出版冗余页面（版权、免责声明、纯书名扉页等）"""
+    t_lower = title.lower()
+    
+    # 明确的冗余标题
+    noise_keywords = [
+        'copyright', 'imprint', 'publisher', 'titlepage', 'title_page',
+        'cover', 'toc', 'contents', 'table of contents',
+        '版权', '图书在版编目', 'cip', '出版说明', '免责声明', '扉页', '书名页'
+    ]
+    if any(k in t_lower for k in noise_keywords):
+        return True
+        
+    # 文本非常短，且内容大部分为版权信息
+    if len(text) < 300:
+        first_part = text[:200].lower()
+        if any(w in first_part for w in ['isbn', 'all rights reserved', 'published by', '版权所有', '责任编辑', '字数', '印张']):
+            return True
+            
+    return False
 
 def extract_metadata(book: epub.EpubBook) -> dict:
     """提取图书元数据"""
@@ -68,6 +90,7 @@ def extract_metadata(book: epub.EpubBook) -> dict:
 def dump_images(book: epub.EpubBook, assets_dir: Path) -> dict:
     """提取书中所有图片，并返回 原文件名 -> assets 导出相对路径 映射表"""
     assets_dir.mkdir(parents=True, exist_ok=True)
+    
     img_map = {}
     for item in book.get_items():
         if item.get_type() == ebooklib.ITEM_IMAGE:
@@ -75,128 +98,66 @@ def dump_images(book: epub.EpubBook, assets_dir: Path) -> dict:
             target_path = assets_dir / orig_name
             with open(target_path, "wb") as f:
                 f.write(item.get_content())
-            img_map[orig_name] = orig_name
-            img_map[item.get_name()] = orig_name
-            img_map[f"../Images/{orig_name}"] = orig_name
-            img_map[f"Images/{orig_name}"] = orig_name
-            img_map[f"../images/{orig_name}"] = orig_name
-            img_map[f"images/{orig_name}"] = orig_name
+            rel_path = f"./assets/{orig_name}"
+            img_map[orig_name] = rel_path
+            img_map[item.get_name()] = rel_path
+            img_map[f"../Images/{orig_name}"] = rel_path
+            img_map[f"Images/{orig_name}"] = rel_path
+            img_map[f"../images/{orig_name}"] = rel_path
+            img_map[f"images/{orig_name}"] = rel_path
+            
     return img_map
 
 def clean_html_and_extract_title(content: bytes) -> tuple[BeautifulSoup, str]:
-    """清洗 HTML 并智能提取标题与副标题"""
+    """清洗 HTML 并提取第一候选标题"""
     soup = BeautifulSoup(content, 'html.parser')
     for tag in soup(['script', 'style', 'link', 'meta']):
         tag.decompose()
         
-    headers = []
-    for tag in soup.find_all(['h1', 'h2', 'h3', 'title']):
-        txt = tag.get_text().strip()
-        if txt and len(txt) > 1 and not txt.lower().startswith("table of contents"):
-            headers.append(txt)
-            
     chapter_title = ""
-    if len(headers) >= 2:
-        h0, h1 = headers[0], headers[1]
-        # 如果 h0 是 "Chapter 1", h1 是 "Leverage" -> 合并为 "Chapter 1: Leverage"
-        if re.match(r'^(Chapter|Part|Section|第[0-9一二三四五六七八九十]+章)\s*\d*$', h0, re.I):
-            chapter_title = f"{h0}: {h1}"
-        elif len(h0) < 30 and len(h1) < 40 and not re.search(r'(contents|copyright)', h0, re.I):
-            chapter_title = f"{h0} - {h1}"
-        else:
-            chapter_title = h0
-    elif len(headers) == 1:
-        chapter_title = headers[0]
-        
-    if not chapter_title:
-        # 尝试 class 中带有 title 的标签
-        for selector in ['.chapter-title', '.title', '.chapter', 'h1', 'h2']:
-            el = soup.select_one(selector)
-            if el and el.get_text().strip():
-                chapter_title = el.get_text().strip()
+    for selector in ['h1', 'h2', 'title', '.chapter-title', '.title', '.headline']:
+        header = soup.select_one(selector)
+        if header and header.get_text().strip():
+            candidate = header.get_text().strip()
+            if len(candidate) > 1 and not candidate.lower().startswith("table of contents"):
+                chapter_title = candidate
                 break
                 
     return soup, chapter_title
 
-def is_redundant_front_or_back_matter(title: str, text: str) -> bool:
-    """识别出版无实质正文的冗余页面（版权、广告、目录、残注）"""
-    t_lower = title.lower().strip()
-    
-    # 纯版权、出版信息
-    if any(k in t_lower for k in [
-        'copyright', 'all rights reserved', 'about the publisher',
-        'table of contents', 'contents', 'also by', 'praise for'
-    ]):
-        return True
-        
-    # 纯书名扉页或封面占位页（字符极少且无主要段落）
-    if any(k in t_lower for k in ['title page', 'cover', 'dedication', 'quote', 'epigraph']):
-        if len(text.split()) < 60:
-            return True
-            
-    # 尾注残页或无内容占位
-    if re.match(r'^chapter_\d+$', t_lower) and len(text.split()) < 40:
-        return True
-        
-    # 纯数字或无意义短文本
-    if len(text.strip()) < 80 and not any(k in text.lower() for k in ['http', 'www', 'introduction', 'prologue']):
-        return True
-        
-    return False
-
-def parse_toc_tree(toc, level=0, parent_title=""):
-    """递归解析 EPUB 的 TOC 层级树"""
-    tree = []
+def parse_toc_section_mapping(toc):
+    """解析 TOC 建立 href -> 大分卷/部名称 的前缀映射"""
+    mapping = {}
     for item in toc:
         if isinstance(item, tuple):
             section, subitems = item
-            sec_title = section.title.strip() if hasattr(section, 'title') else "Section"
-            sec_href = section.href if hasattr(section, 'href') else ""
-            tree.append({
-                "title": sec_title,
-                "href": sec_href.split('#')[0] if sec_href else "",
-                "is_section": True,
-                "children": parse_toc_tree(subitems, level + 1, sec_title)
-            })
-        elif hasattr(item, 'href'):
-            tree.append({
-                "title": item.title.strip(),
-                "href": item.href.split('#')[0] if item.href else "",
-                "is_section": False,
-                "children": []
-            })
-    return tree
-
-def build_href_to_section_map(toc_tree, current_section=""):
-    """建立 href 文件名 -> 所属分卷/分部(Section) 名称的映射"""
-    mapping = {}
-    for node in toc_tree:
-        sec_name = current_section
-        if node["is_section"]:
-            sec_name = node["title"]
-        if node["href"]:
-            mapping[node["href"]] = sec_name
-        if node["children"]:
-            sub_map = build_href_to_section_map(node["children"], sec_name)
-            mapping.update(sub_map)
+            sec_title = section.title.strip() if hasattr(section, 'title') else ""
+            sec_href = section.href.split('#')[0] if hasattr(section, 'href') and section.href else ""
+            if sec_href and sec_title:
+                mapping[sec_href] = sec_title
+            for sub in subitems:
+                if hasattr(sub, 'href') and sub.href:
+                    mapping[sub.href.split('#')[0]] = sec_title
+        elif hasattr(item, 'href') and item.href:
+            mapping[item.href.split('#')[0]] = ""
     return mapping
 
-def convert_to_markdown(soup: BeautifulSoup, img_map: dict, rel_assets_prefix: str) -> str:
-    """替换图片相对链接并转换为洁净 Markdown"""
+def convert_to_markdown(soup: BeautifulSoup, img_map: dict) -> str:
+    """替换图片路径、清洗内部死链并转为 Markdown"""
     for img in soup.find_all('img'):
         src = img.get('src', '')
         src_name = Path(src).name
         if src_name in img_map:
-            img['src'] = f"{rel_assets_prefix}{img_map[src_name]}"
+            img['src'] = img_map[src_name]
         elif src in img_map:
-            img['src'] = f"{rel_assets_prefix}{img_map[src]}"
+            img['src'] = img_map[src]
 
     for svg_img in soup.find_all(['image', 'svg:image']):
         href = svg_img.get('xlink:href') or svg_img.get('href')
         if href:
             href_name = Path(href).name
             if href_name in img_map:
-                new_img = soup.new_tag("img", src=f"{rel_assets_prefix}{img_map[href_name]}")
+                new_img = soup.new_tag("img", src=img_map[href_name])
                 svg_img.replace_with(new_img)
 
     text = md(
@@ -205,20 +166,15 @@ def convert_to_markdown(soup: BeautifulSoup, img_map: dict, rel_assets_prefix: s
         bullets_style="-",
         strip=['script', 'style']
     )
-    
-    # 洁癖级文本清洗
-    # 1. 移除 xml version 声明
-    text = re.sub(r'xml version=[\'"][^\'"]*[\'"]\s*encoding=[\'"][^\'"]*[\'"]\??', '', text)
-    # 2. 清除失效的 xhtml 跳转锚点，恢复纯文本标题
-    text = re.sub(r'##\s*\[([^\]]+)\]\([^)]+\.xhtml[^)]*\)', r'## \1', text)
+    # 清洗失效的内部 xhtml 链接跳转，保留显示文字
     text = re.sub(r'#\s*\[([^\]]+)\]\([^)]+\.xhtml[^)]*\)', r'# \1', text)
     text = re.sub(r'\[([^\]]+)\]\([^)]+\.xhtml[^)]*\)', r'\1', text)
-    # 3. 合并过多空行
+    # 合并连续多余空行
     text = re.sub(r'\n{3,}', '\n\n', text).strip()
     return text
 
-def parse_and_export(epub_path: str, output_dir: str, nested: bool = False, save_images: bool = True, keep_all: bool = False):
-    """核心导出执行流程"""
+def parse_and_export(epub_path: str, output_dir: str, save_images: bool = True, keep_all: bool = False):
+    """核心平铺导出执行流程"""
     epub_file = Path(epub_path).resolve()
     if not epub_file.exists():
         print(f"错误: 找不到文件 {epub_path}", file=sys.stderr)
@@ -234,16 +190,17 @@ def parse_and_export(epub_path: str, output_dir: str, nested: bool = False, save
     metadata = extract_metadata(book)
     print(f"📌 书名: {metadata['title']}")
     print(f"👤 作者: {metadata['creator']}")
-    print(f"🗂️  模式: {'多级目录嵌套模式 (Nested)' if nested else '标准单级平铺模式 (Flat)'}")
+    print(f"🗂️  模式: 统一单层平铺模式 (Flat)")
     
+    # 导出图片
     img_map = {}
     if save_images:
         print("🖼️  正在导出插图与封面...")
         img_map = dump_images(book, assets_dir)
-        print(f"   已导出 {len(set(img_map.values()))} 个图片资源至 assets/")
+        print(f"   已导出 {len(set(img_map.values()))} 个图片资源至 ./assets/")
         
-    toc_tree = parse_toc_tree(book.toc)
-    href_to_section = build_href_to_section_map(toc_tree) if nested else {}
+    # 解析 TOC 卷名映射
+    href_to_section = parse_toc_section_mapping(book.toc)
     
     print("✂️  正在提取与过滤各章节...")
     raw_chapters = []
@@ -257,56 +214,49 @@ def parse_and_export(epub_path: str, output_dir: str, nested: bool = False, save
         soup, title_from_html = clean_html_and_extract_title(item.get_content())
         plain_text = soup.get_text().strip()
         
-        # 基础过滤：字符过短
+        # 过滤过短无意义空页
         if len(plain_text) < 20 and not any(tag in str(soup) for tag in ['<img', 'src=']):
             continue
             
-        # 智能过滤出版冗余页（版权页、出版社介绍、空扉页、无意义目录）
+        # 智能过滤版权与冗余页
         if not keep_all:
             candidate_title = title_from_html if title_from_html else item_href
-            if is_redundant_front_or_back_matter(candidate_title, plain_text):
+            if is_redundant_page(candidate_title, plain_text):
                 continue
                 
         section_name = href_to_section.get(item_href, "")
         raw_chapters.append({
-            "item": item,
             "soup": soup,
             "title_from_html": title_from_html,
             "section_name": section_name,
             "item_href": item_href
         })
         
-    total_chapters = len(raw_chapters)
-    processed_articles = []
     clean_tag = sanitize_filename(metadata['title']).lower().replace('_', '-')
+    processed_articles = []
     
-    # 连续顺次重排序号 (1-indexed)
+    # 连续顺次重排为单层平铺文件
     for idx, chap_info in enumerate(raw_chapters, start=1):
         soup = chap_info["soup"]
         title_from_html = chap_info["title_from_html"]
         section = chap_info["section_name"]
         
+        # 标题生成
         title = title_from_html if title_from_html else f"Chapter_{idx:02d}"
         title = re.sub(r'\s+', ' ', title).strip()
-        safe_title = sanitize_filename(title)
         
-        if nested and section:
-            safe_section = sanitize_filename(section)
-            target_folder = out_dir / safe_section
-            target_folder.mkdir(parents=True, exist_ok=True)
-            filename = f"{idx:02d}_{safe_title}.md"
-            file_path = target_folder / filename
-            rel_link = f"./{safe_section}/{filename}"
-            rel_assets_prefix = "../assets/"
-            rel_root_prefix = "../"
+        # 如果有分卷名且标题未包含，在文件名中优雅体现分卷信息，但绝不创建子文件夹
+        if section and section not in title:
+            file_title = f"{section}_{title}"
         else:
-            filename = f"{idx:02d}_{safe_title}.md"
-            file_path = out_dir / filename
-            rel_link = f"./{filename}"
-            rel_assets_prefix = "./assets/"
-            rel_root_prefix = "./"
+            file_title = title
             
-        markdown_body = convert_to_markdown(soup, img_map, rel_assets_prefix)
+        safe_title = sanitize_filename(file_title)
+        filename = f"{idx:02d}_{safe_title}.md"
+        file_path = out_dir / filename
+        rel_link = f"./{filename}"
+        
+        markdown_body = convert_to_markdown(soup, img_map)
         word_count, read_time = calculate_stats(markdown_body)
         
         frontmatter = [
@@ -326,31 +276,32 @@ def parse_and_export(epub_path: str, output_dir: str, nested: bool = False, save
         processed_articles.append({
             "index": idx,
             "title": title,
+            "section": section,
+            "filename": filename,
             "file_path": file_path,
             "rel_link": rel_link,
-            "rel_root_prefix": rel_root_prefix,
             "frontmatter": "\n".join(frontmatter),
-            "markdown_body": markdown_body,
-            "section": section
+            "markdown_body": markdown_body
         })
         
+    # 写入各章节文件（全部位于同一层级，导航链接极致稳定）
     for i, art in enumerate(processed_articles):
         nav_links = []
-        root_pre = art["rel_root_prefix"]
         
+        # 上一章
         if i > 0:
             prev_art = processed_articles[i - 1]
-            prev_rel = prev_art["rel_link"].replace("./", root_pre)
-            nav_links.append(f"⬅️ [上一章：{prev_art['title']}]({prev_rel})")
+            nav_links.append(f"⬅️ [上一章：{prev_art['title']}]({prev_art['rel_link']})")
         else:
             nav_links.append("⬅️ [第一章]")
             
-        nav_links.append(f"📑 [返回目录]({root_pre}README.md)")
+        # 目录
+        nav_links.append(f"📑 [返回目录](./README.md)")
         
+        # 下一章
         if i + 1 < len(processed_articles):
             next_art = processed_articles[i + 1]
-            next_rel = next_art["rel_link"].replace("./", root_pre)
-            nav_links.append(f"➡️ [下一章：{next_art['title']}]({next_rel})")
+            nav_links.append(f"➡️ [下一章：{next_art['title']}]({next_art['rel_link']})")
         else:
             nav_links.append("➡️ [尾声]")
             
@@ -363,7 +314,8 @@ def parse_and_export(epub_path: str, output_dir: str, nested: bool = False, save
             f.write(art["markdown_body"])
             f.write(nav_footer)
             
-    print("📝 生成全书目录索引与 GitBook SUMMARY...")
+    # 生成 README.md 与 SUMMARY.md
+    print("📝 生成全书单层平铺目录与 SUMMARY.md...")
     readme_path = out_dir / "README.md"
     with open(readme_path, "w", encoding="utf-8") as f:
         f.write(f"# {metadata['title']}\n\n")
@@ -373,35 +325,26 @@ def parse_and_export(epub_path: str, output_dir: str, nested: bool = False, save
         if metadata['description']:
             f.write(f"- **简介**: {metadata['description']}\n")
         f.write("\n---\n\n## 📑 章节目录\n\n")
-        
-        current_sec = None
         for chap in processed_articles:
-            if nested and chap["section"] and chap["section"] != current_sec:
-                current_sec = chap["section"]
-                f.write(f"\n### 📂 {current_sec}\n\n")
-            f.write(f"- [{chap['index']:02d}. {chap['title']}]({chap['rel_link']})\n")
+            prefix = f"【{chap['section']}】" if chap['section'] else ""
+            f.write(f"- [{chap['index']:02d}. {prefix}{chap['title']}]({chap['rel_link']})\n")
             
     summary_path = out_dir / "SUMMARY.md"
     with open(summary_path, "w", encoding="utf-8") as f:
         f.write(f"# Summary\n\n")
         f.write(f"* [{metadata['title']}](README.md)\n")
-        current_sec = None
         for chap in processed_articles:
-            if nested and chap["section"] and chap["section"] != current_sec:
-                current_sec = chap["section"]
-                f.write(f"\n* **{current_sec}**\n")
-            indent = "    " if (nested and chap["section"]) else "  "
-            f.write(f"{indent}* [{chap['title']}]({chap['rel_link'].replace('./', '')})\n")
+            prefix = f"{chap['section']} - " if chap['section'] else ""
+            f.write(f"  * [{prefix}{chap['title']}]({chap['filename']})\n")
             
-    print(f"\n🎉 提取完成！已智能过滤杂质，共输出 {len(processed_articles)} 个纯净正文章节。")
+    print(f"\n🎉 提取完成！已按单层平铺输出 {len(processed_articles)} 个纯净章节。")
     print(f"📂 输出目录: {out_dir}")
     print(f"📑 目录索引: {readme_path}")
 
 def main():
-    parser = argparse.ArgumentParser(description="将 EPUB 电子书按章节拆分导出为带元数据的 Markdown 文档 (v2.1 智能纯净版)")
+    parser = argparse.ArgumentParser(description="将 EPUB 电子书按章节拆分导出为单层平铺的 Markdown 文档 (v2.2)")
     parser.add_argument("input", help="EPUB 文件路径")
     parser.add_argument("-o", "--output", help="输出目录路径 (默认为当前目录/书名)", default=None)
-    parser.add_argument("--nested", action="store_true", help="启用多级目录嵌套模式 (按卷/部创建子文件夹)")
     parser.add_argument("--no-images", action="store_true", help="不导出图片资源")
     parser.add_argument("--keep-all", action="store_true", help="保留版权声明、封面占位等全部附属页面，不过滤")
     
@@ -420,7 +363,6 @@ def main():
     parse_and_export(
         str(input_file),
         str(output_dir),
-        nested=args.nested,
         save_images=not args.no_images,
         keep_all=args.keep_all
     )
