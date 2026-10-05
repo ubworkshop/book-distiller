@@ -1,22 +1,32 @@
 # epub-to-markdown
 
-> Precise chapter-by-chapter EPUB extraction to clean, flat Markdown documents with smart noise filtering, YAML frontmatter, image assets, and structured indexes.
+> Precise chapter-by-chapter EPUB extraction to clean, flat Markdown documents with modular sub-skills (e.g. 4-dimensional writing insights extraction), smart noise filtering, YAML frontmatter, image assets, and structured indexes.
 
 An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone Markdown chapters, preserving image assets and hierarchy, and building `README.md` and `SUMMARY.md` catalogs for Obsidian, Notion, or GitBook.
 
 ## ✨ Features
 
 - **Strictly Flat Directory Structure**: All chapters are extracted side-by-side into a single folder. No confusing nested directories or broken relative links.
+- **Modular Sub-skills Support**: Built-in `subskills/extract-insights` to distill chapters into actionable raw materials for content creation (Hooks, Stories, Checklists, Golden Quotes).
 - **Smart Noise & Copyright Filtering**: Automatically detects and skips publisher copyright pages, empty title pages, redundant in-book TOCs, and broken internal XHTML anchors. Use `--keep-all` if you prefer to retain them.
 - **Sequential Indexing**: Consecutively numbers chapters (`01_xxx.md`, `02_xxx.md`) without missing-number gaps.
-- **Volume & Section Identification**: If a book has parts/volumes, section names are cleanly incorporated into filenames (e.g. `02_Part1_My_Journey_Chapter1.md`) without creating subfolders.
 - **YAML Frontmatter Injection**: Embeds structured metadata into every chapter header (`book`, `author`, `chapter_index`, `word_count`, `read_time`, `tags`) — tailored for Obsidian and Notion property databases.
 - **Prev / Next Chapter Navigation**: Adds bidirectional `⬅️ Previous Chapter | 📑 Table of Contents | ➡️ Next Chapter` links at the bottom of every page with rock-solid relative paths (`./01_xxx.md`).
 - **Image & Asset Extraction**: Automatically exports book covers, diagrams, and illustrations to `./assets/` and updates relative paths (`![](./assets/xxx.png)`).
-- **Clean Markdown Formatting**: Strips inline styles, redundant scripts, and HTML tags while retaining standard headings (ATX), blockquotes, lists, and bold/italic text.
-- **Automated Catalog Indexes**:
-  - `README.md`: Contains book metadata (title, author, description) and a clickable table of contents.
-  - `SUMMARY.md`: Compatible with GitBook and mdBook sidebar navigation.
+
+---
+
+## 🧩 Sub-skills (子技能)
+
+### `extract-insights` (4 类写作黄金原料提取)
+
+Refuses generic summaries. Focuses purely on extracting high-yield creator assets from any extracted chapter `.md`:
+1. ⚡️ **Contrarian Hooks (反直觉认知)**: Common misconception vs deep counter-intuitive insight + 3 social hook variations.
+2. 📖 **Stories & Micro-cases (故事与微案例)**: Concrete character, conflict, key turning point, and core takeaway.
+3. 🛠️ **Actionable Checklists (可落地微清单)**: 3-step execution framework + 1 "Never Do" boundary.
+4. 💎 **Golden Quotes (高穿透金句)**: Emotionally resonant quotes with recommended social media usage contexts.
+
+---
 
 ## 🚀 Installation & Setup
 
@@ -28,17 +38,14 @@ An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone M
 ### 2. Manual CLI Usage
 
 ```bash
-# Standard flat clean extraction (filters out copyright noise)
+# 1. Standard flat clean extraction
 python3 scripts/extract_chapters.py "/path/to/book.epub"
 
-# Retain all pages including publisher front/back matter
+# 2. Retain all pages including publisher front/back matter
 python3 scripts/extract_chapters.py "/path/to/book.epub" --keep-all
 
-# Custom output directory
-python3 scripts/extract_chapters.py "/path/to/book.epub" -o "./my_book_notes"
-
-# Skip image extraction (text only)
-python3 scripts/extract_chapters.py "/path/to/book.epub" --no-images
+# 3. Setup insights workspace for an extracted book
+python3 scripts/extract_insights.py "/path/to/extracted_book_folder"
 ```
 
 ### 3. Agent Skill Integration
@@ -52,7 +59,7 @@ git clone https://github.com/ubworkshop/epub-to-markdown.git ~/.gemini/config/sk
 
 Then trigger via natural language:
 - *"Extract all chapters from this book: `Principles.epub`"*
-- *"Convert this EPUB into markdown files by chapter"*
+- *"Extract the 4 golden writing insights from `02_My_Journey.md`"*
 
 ## 📂 Output Structure
 
@@ -66,7 +73,9 @@ Book_Notes/
 ├── 01_Introduction.md
 ├── 02_Part1_My_Journey_Crossing_the_Threshold.md
 ├── 03_Part2_Life_Principles_Embrace_Reality.md
-└── ...
+└── insights/               # 👈 Generated via extract-insights sub-skill
+    ├── 00_全书爆款选题与反直觉库.md
+    └── 00_全书高穿透金句大全.md
 ```
 
 ## 📄 License

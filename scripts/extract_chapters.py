@@ -6,6 +6,8 @@ EPUB Chapter Extractor (v2.2 单层平铺纯净版)
 特性：
 - 严格单层平铺：所有章节整齐平铺在同一目录下，绝不产生层级混乱
 - 统一相对路径：图片统一引用 ./assets/xxx.png，上一章/下一章统一为 ./xx.md
+- 复合副标题合并：智能识别将 "Chapter 1" 与 "Leverage" 拼合为 "Chapter 1: Leverage"
+- 文本洁癖级净化：自动剥离 xml version 头部代码与 xhtml 内部死链
 - YAML Frontmatter 元数据注入 (书名, 作者, 序号, 字数, 预估时长, 标签)
 - 章节底部 上一章 / 返回目录 / 下一章 翻页导航
 - 智能过滤版权页、空扉页、出版社广告与无效内部链接
@@ -22,7 +24,7 @@ from ebooklib import epub
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
 
-def sanitize_filename(name: str, max_length: int = 60) -> str:
+def sanitize_filename(name: str, max_length: int = 70) -> str:
     """清理文件名中的非法字符"""
     clean = re.sub(r'[\\/*?:"<>|#\n\r\t]', '', name)
     clean = clean.strip().replace(' ', '_')
@@ -41,20 +43,33 @@ def calculate_stats(text: str) -> tuple[int, str]:
 
 def is_redundant_page(title: str, text: str) -> bool:
     """判断是否为出版冗余页面（版权、免责声明、纯书名扉页等）"""
-    t_lower = title.lower()
+    t_lower = title.lower().strip()
     
     # 明确的冗余标题
     noise_keywords = [
         'copyright', 'imprint', 'publisher', 'titlepage', 'title_page',
-        'cover', 'toc', 'contents', 'table of contents',
+        'title page', 'cover', 'toc', 'contents', 'table of contents',
+        'about the publisher', 'also by', 'praise for',
         '版权', '图书在版编目', 'cip', '出版说明', '免责声明', '扉页', '书名页'
     ]
     if any(k in t_lower for k in noise_keywords):
         return True
         
-    # 文本非常短，且内容大部分为版权信息
-    if len(text) < 300:
-        first_part = text[:200].lower()
+    # 文本过短且几乎无有效正文（纯引言名句或献辞孤立页）
+    if len(text.split()) < 50:
+        if any(w in t_lower for w in ['quote', 'dedication', 'epigraph', 'chapter_']):
+            return True
+            
+    # 尾注残页、广告页或无实质内容的图片占位页
+    if len(text.split()) < 35:
+        if any(w in t_lower for w in ['chapter_', 'ad', 'advertisement', 'signup', 'sign-up']) or 'advertisement' in text.lower():
+            return True
+        if not any(k in t_lower for k in ['introduction', 'start here', 'prologue', 'epilogue', 'conclusion', 'preface', '序', '引言']):
+            return True
+            
+    # 文本短且包含大量出版/版权/法律信息
+    if len(text) < 350:
+        first_part = text[:250].lower()
         if any(w in first_part for w in ['isbn', 'all rights reserved', 'published by', '版权所有', '责任编辑', '字数', '印张']):
             return True
             
@@ -109,18 +124,35 @@ def dump_images(book: epub.EpubBook, assets_dir: Path) -> dict:
     return img_map
 
 def clean_html_and_extract_title(content: bytes) -> tuple[BeautifulSoup, str]:
-    """清洗 HTML 并提取第一候选标题"""
+    """清洗 HTML 并智能提取标题与副标题"""
     soup = BeautifulSoup(content, 'html.parser')
     for tag in soup(['script', 'style', 'link', 'meta']):
         tag.decompose()
         
+    headers = []
+    for tag in soup.find_all(['h1', 'h2', 'h3', 'title']):
+        txt = tag.get_text().strip()
+        if txt and len(txt) > 1 and not txt.lower().startswith("table of contents"):
+            headers.append(txt)
+            
     chapter_title = ""
-    for selector in ['h1', 'h2', 'title', '.chapter-title', '.title', '.headline']:
-        header = soup.select_one(selector)
-        if header and header.get_text().strip():
-            candidate = header.get_text().strip()
-            if len(candidate) > 1 and not candidate.lower().startswith("table of contents"):
-                chapter_title = candidate
+    if len(headers) >= 2:
+        h0, h1 = headers[0], headers[1]
+        # 如果 h0 是 "Chapter 1", h1 是 "Leverage" -> 合并为 "Chapter 1: Leverage"
+        if re.match(r'^(Chapter|Part|Section|第[0-9一二三四五六七八九十]+章)\s*\d*$', h0, re.I):
+            chapter_title = f"{h0}: {h1}"
+        elif len(h0) < 30 and len(h1) < 40 and not re.search(r'(contents|copyright)', h0, re.I):
+            chapter_title = f"{h0} - {h1}"
+        else:
+            chapter_title = h0
+    elif len(headers) == 1:
+        chapter_title = headers[0]
+        
+    if not chapter_title:
+        for selector in ['.chapter-title', '.title', '.headline', 'h1', 'h2']:
+            el = soup.select_one(selector)
+            if el and el.get_text().strip():
+                chapter_title = el.get_text().strip()
                 break
                 
     return soup, chapter_title
@@ -143,7 +175,7 @@ def parse_toc_section_mapping(toc):
     return mapping
 
 def convert_to_markdown(soup: BeautifulSoup, img_map: dict) -> str:
-    """替换图片路径、清洗内部死链并转为 Markdown"""
+    """替换图片路径、清洗内部死链与 xml 代码并转为干净 Markdown"""
     for img in soup.find_all('img'):
         src = img.get('src', '')
         src_name = Path(src).name
@@ -166,7 +198,10 @@ def convert_to_markdown(soup: BeautifulSoup, img_map: dict) -> str:
         bullets_style="-",
         strip=['script', 'style']
     )
+    # 彻底抹除 xml version 声明
+    text = re.sub(r'xml version=[\'"][^\'"]*[\'"]\s*encoding=[\'"][^\'"]*[\'"]\??', '', text)
     # 清洗失效的内部 xhtml 链接跳转，保留显示文字
+    text = re.sub(r'##\s*\[([^\]]+)\]\([^)]+\.xhtml[^)]*\)', r'## \1', text)
     text = re.sub(r'#\s*\[([^\]]+)\]\([^)]+\.xhtml[^)]*\)', r'# \1', text)
     text = re.sub(r'\[([^\]]+)\]\([^)]+\.xhtml[^)]*\)', r'\1', text)
     # 合并连续多余空行
@@ -190,7 +225,7 @@ def parse_and_export(epub_path: str, output_dir: str, save_images: bool = True, 
     metadata = extract_metadata(book)
     print(f"📌 书名: {metadata['title']}")
     print(f"👤 作者: {metadata['creator']}")
-    print(f"🗂️  模式: 统一单层平铺模式 (Flat)")
+    print(f"🗂️  模式: 统一单层平铺纯净模式 (Flat)")
     
     # 导出图片
     img_map = {}
@@ -245,9 +280,11 @@ def parse_and_export(epub_path: str, output_dir: str, save_images: bool = True, 
         title = title_from_html if title_from_html else f"Chapter_{idx:02d}"
         title = re.sub(r'\s+', ' ', title).strip()
         
-        # 如果有分卷名且标题未包含，在文件名中优雅体现分卷信息，但绝不创建子文件夹
+        # 如果有分卷名且标题未包含，在文件名中体现分卷名，保持单层平铺
         if section and section not in title:
-            file_title = f"{section}_{title}"
+            # 简写 Part I 为 Part_I
+            sec_clean = sanitize_filename(section.split(':')[0])
+            file_title = f"{sec_clean}_{title}"
         else:
             file_title = title
             
