@@ -1,17 +1,15 @@
 # epub-to-markdown
 
-> Precise chapter-by-chapter EPUB extraction to clean, flat Markdown documents with modular sub-skills (Obsidian wikilinks graph, viral potential scoring, symptom/problem mapping, and 4D writing insights), smart noise filtering, YAML frontmatter, image assets, and structured indexes.
+> Precise chapter-by-chapter EPUB extraction to clean, flat Markdown documents with modular sub-skills (extract-insights: 4D raw materials + Obsidian graph; book-review: multi-platform high-resonance book reviews for Xiaohongshu, Threads, WeChat), smart noise filtering, YAML frontmatter, image assets, and structured indexes.
 
 An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone Markdown chapters, preserving image assets and hierarchy, and building `README.md` and `SUMMARY.md` catalogs for Obsidian, Notion, or GitBook.
 
 ## ✨ Features
 
 - **Strictly Flat Directory Structure**: All chapters are extracted side-by-side into a single folder. No confusing nested directories or broken relative links.
-- **Modular Sub-skills (Advanced Creator Suite v2.5)**:
-  - ⚡️ **Viral Potential Scoring**: Rates each chapter's ideas with 1-5 stars and pins the **🔥 Top 5 Viral Topics** at the top of the ideas library.
-  - 🧠 **Obsidian Concept Graph**: Extracts `[[Wikilinks]]` for core models and principles across chapters to illuminate a full knowledge network.
-  - 🎯 **Symptom / Problem Indexing**: Translates book theories into real-life reader struggles (e.g. mental exhaustion, boundary setting, goal confusion) so readers can find solutions immediately.
-  - 💎 **4D Writing Raw Materials**: Contrarian Hooks, Story Evidence, Actionable Checklists, and High-resonance Quotes.
+- **Modular Sub-skills (Advanced Creator Suite v2.6)**:
+  - ⚡️ **`extract-insights`**: Extracts Contrarian Hooks (with 1-5 ⭐ viral ratings and 🔥 Top 5 pinned topics), Concrete Stories/Cases, Actionable Checklists, High-resonance Quotes, Obsidian Concept Graph (`[[Wikilinks]]`), and Symptom Mapping.
+  - ✍️ **`book-review`**: Weaves extracted raw materials into platform-native, high-resonance book reviews (Xiaohongshu visual cards, Threads 4-post threads, WeChat in-depth essays). Rejects boring textbook-style plot summaries in favor of untangling real-life reader struggles with a calm, empathetic, anti-preachy voice.
 - **Smart Noise & Copyright Filtering**: Automatically detects and skips publisher copyright pages, empty title pages, redundant in-book TOCs, and broken internal XHTML anchors. Use `--keep-all` if you prefer to retain them.
 - **Sequential Indexing**: Consecutively numbers chapters (`01_xxx.md`, `02_xxx.md`) without missing-number gaps.
 - **YAML Frontmatter Injection**: Embeds structured metadata into every chapter header (`book`, `author`, `chapter_index`, `word_count`, `read_time`, `tags`) — tailored for Obsidian and Notion property databases.
@@ -20,9 +18,20 @@ An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone M
 
 ---
 
-## 🧩 Sub-skills (子技能)
+## 🧩 Sub-skills Ecosystem (子技能生态)
 
-### `extract-insights` (写作黄金原料库与灵感总库)
+```mermaid
+flowchart LR
+    EPUB[EPUB eBook] --> Main[epub-to-markdown]
+    Main --> Chapters[Flat Markdown Chapters]
+    Chapters --> S1[Sub-skill: extract-insights]
+    S1 --> Master[insights/ Master Libraries]
+    Master --> S2[Sub-skill: book-review]
+    Chapters --> S2
+    S2 --> Reviews[reviews/ Multi-platform Posts]
+```
+
+### 1. `extract-insights` (写作黄金原料库与灵感总库)
 
 Refuses generic summaries. Focuses purely on extracting high-yield creator assets from any extracted chapter `.md`:
 1. ⚡️ **Contrarian Hooks (反直觉认知)**: Common misconception vs deep counter-intuitive insight + 3 social hook variations + **Viral Rating (1-5 ⭐)**.
@@ -31,6 +40,13 @@ Refuses generic summaries. Focuses purely on extracting high-yield creator asset
 4. 💎 **Golden Quotes (高穿透金句)**: Emotionally resonant quotes with recommended social media usage contexts.
 5. 🔗 **Obsidian Wikilinks**: Embeds `[[Concept]]` links for interactive graph visualization.
 6. 🎯 **Symptom Mapping**: Connects reader pain points directly to the book's chapter solutions.
+
+### 2. `book-review` (高穿透读后感与书评生成器)
+
+Transforms raw book material into ready-to-publish social media book reviews:
+- 📱 **Xiaohongshu (RED)**: Dual-line hook title + relatable life struggle + 3 core epiphany points + aesthetic cards.
+- 🧵 **Threads / X**: 4-post mental flow (1/4 Hook ➔ 2/4 Mindset Inversion ➔ 3/4 Actionable Habit ➔ 4/4 Warm Closing), strictly under 500 characters per post.
+- 📰 **WeChat Official Account / Blog**: Deep reflective prose linking everyday scenarios to the book's foundational philosophy.
 
 ---
 
@@ -47,11 +63,11 @@ Refuses generic summaries. Focuses purely on extracting high-yield creator asset
 # 1. Standard flat clean extraction
 python3 scripts/extract_chapters.py "/path/to/book.epub"
 
-# 2. Retain all pages including publisher front/back matter
-python3 scripts/extract_chapters.py "/path/to/book.epub" --keep-all
-
-# 3. Setup the 4 master insights libraries for an extracted book
+# 2. Setup the 4 master insights libraries for an extracted book
 python3 scripts/extract_insights.py "/path/to/extracted_book_folder"
+
+# 3. Generate book review scaffolding for social media (xhs / threads / wechat / all)
+python3 scripts/generate_review.py "/path/to/extracted_book_folder" --platform all --topic "职场内耗与边界感"
 ```
 
 ### 3. Agent Skill Integration
@@ -65,8 +81,9 @@ git clone https://github.com/ubworkshop/epub-to-markdown.git ~/.gemini/config/sk
 
 Then trigger via natural language:
 - *"Extract all chapters from this book: `Principles.epub`"*
-- *"Extract the 4 golden writing insights from `02_My_Journey.md`"*
 - *"Batch extract all insights and generate the 4 master libraries for this book folder"*
+- *"Write an empathetic Xiaohongshu book review based on the insights in this folder"*
+- *"Create a 4-post Threads thread addressing mental burnout using concepts from Chapter 3"*
 
 ## 📂 Output Structure
 
@@ -80,13 +97,17 @@ Book_Notes/
 ├── 01_Introduction.md
 ├── 02_Part1_My_Journey_Crossing_the_Threshold.md
 ├── 03_Part2_Life_Principles_Embrace_Reality.md
-└── insights/                                 # 👈 Advanced Creator Suite (v2.5)
-    ├── 00_全书爆款选题与反直觉库.md            # (含 🔥 Top 5 必爆黄金选题置顶)
-    ├── 00_全书高穿透金句大全.md                # (带社交发帖语境)
-    ├── 00_读者现实痛点与对号入座索引.md         # (现实烦恼 -> 章节解法映射)
-    ├── 00_全书核心概念与思维模型图谱.md         # (Obsidian [[概念双链]])
-    ├── 01_Introduction_原料卡.md
-    └── ...
+├── insights/                                 # 👈 Sub-skill: extract-insights
+│   ├── 00_全书爆款选题与反直觉库.md            # (含 🔥 Top 5 必爆黄金选题置顶)
+│   ├── 00_全书高穿透金句大全.md                # (带社交发帖语境)
+│   ├── 00_读者现实痛点与对号入座索引.md         # (现实烦恼 -> 章节解法映射)
+│   ├── 00_全书核心概念与思维模型图谱.md         # (Obsidian [[概念双链]])
+│   ├── 01_Introduction_原料卡.md
+│   └── ...
+└── reviews/                                  # 👈 Sub-skill: book-review
+    ├── review_xhs_20261005_120000.md        # 小红书高赞图文笔记
+    ├── review_threads_20261005_120000.md    # Threads 4 帖心流串帖
+    └── review_wechat_20261005_120000.md     # 公众号深度随笔
 ```
 
 ## 📄 License

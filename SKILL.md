@@ -1,11 +1,11 @@
 ---
 name: epub-to-markdown
-description: 将 EPUB 电子书按章节精确提取并切分为单层平铺的独立 Markdown 文档。支持挂载子技能（Sub-skills，如 extract-insights 提取 4 类写作黄金原料）、智能过滤版权与无意义杂质、自动注入 YAML Frontmatter 元数据（书名、作者、字数、阅读时长、标签）、章节底部双向连续翻页导航、提取内嵌配图与重定向相对路径，并自动生成 README.md 和 SUMMARY.md 索引目录（完美适配 Obsidian、Notion 及 GitBook）。当用户提到"提取epub"、"epub转markdown"、"epub拆分章节"、"电子书拆解"、"epub 章节导出"、"提取黄金原料"等需求时触发。
+description: 将 EPUB 电子书按章节精确提取并切分为单层平铺的独立 Markdown 文档。支持挂载子技能（Sub-skills，如 extract-insights 提取 4 类写作黄金原料、book-review 生成多平台高赞读后感与书评）、智能过滤版权与无意义杂质、自动注入 YAML Frontmatter 元数据（书名、作者、字数、阅读时长、标签）、章节底部双向连续翻页导航、提取内嵌配图与重定向相对路径，并自动生成 README.md 和 SUMMARY.md 索引目录（完美适配 Obsidian、Notion 及 GitBook）。当用户提到"提取epub"、"epub转markdown"、"epub拆分章节"、"电子书拆解"、"epub 章节导出"、"提取黄金原料"、"写读后感"、"小红书书评"等需求时触发。
 ---
 
-# EPUB 章节转 Markdown Skill (v2.3 模块化子技能版)
+# EPUB 章节转 Markdown Skill (v2.6 模块化创作子技能版)
 
-将 EPUB 电子书按章节结构自动解包、清洗，并转成一套规范的单层平铺独立 Markdown 知识库；同时支持调用下游子技能进行创作加工。
+将 EPUB 电子书按章节结构自动解包、清洗，并转成一套规范的单层平铺独立 Markdown 知识库；同时向下游串联子技能流水线，实现从**书籍切分 ➔ 黄金原料挖掘 ➔ 多平台高穿透读后感生成**的完整工作流。
 
 ## 核心架构与功能
 
@@ -19,19 +19,38 @@ description: 将 EPUB 电子书按章节精确提取并切分为单层平铺的�
 
 ---
 
-## 🧩 挂载子技能 (Sub-skills)
+## 🧩 挂载子技能体系 (Sub-skills Ecosystem)
 
-本技能支持向下游扩展专业子技能。目前已内置：
+本技能支持向下游扩展专业子技能流水线：
 
-### 1. `extract-insights` (4 类写作黄金原料提取)
-- **定位**：拒绝无意义的全文摘要，专门从切分好的章节中挖掘自媒体与长文创作的 4 类黄金原料：
-  - ⚡️ **反直觉认知 (Hook 灵感)**：打破常识误区，提炼 3 种爆款钩子。
+```mermaid
+flowchart TD
+    EPUB[原始 EPUB 电子书] --> Main[epub-to-markdown 主技能]
+    Main --> Chapters[单层平铺章节 Markdown]
+    Chapters --> S1[Sub-skill: extract-insights]
+    S1 --> Insights[insights/ 四大黄金原料总库]
+    Insights --> S2[Sub-skill: book-review]
+    Chapters --> S2
+    S2 --> XHS[小红书深度图文笔记]
+    S2 --> Threads[Threads/X 4帖心流串帖]
+    S2 --> WeChat[公众号/博客深度随笔]
+```
+
+### 1. `extract-insights` (4+2 黄金原料提取)
+- **定位**：拒绝无意义的全文大意总结，专门从切分好的章节中挖掘自媒体与长文创作的 4 类黄金原料：
+  - ⚡️ **反直觉认知 (Hook 灵感)**：打破常识误区，提炼 3 种爆款钩子（含 ⭐⭐⭐⭐⭐ 爆款评级）。
   - 📖 **故事与微案例 (论据素材)**：具象人物冲突与破局案例。
   - 🛠️ **可落地微清单 (读者收藏向)**：三步流程法与避坑红线。
   - 💎 **高穿透金句 (社交配图)**：情绪共鸣强烈的金句与适用语境。
-- **触发方式**：
-  - 针对单章：“提取 `02_第一部_探索.md` 的黄金原料”
-  - 批量建立原料库：“为这本解包好的书建立写作原料库”
+  - 🎯 **读者痛点对号入座**：直击现实烦恼的病症映射索引。
+  - 🧠 **概念双链图谱**：Obsidian `[[概念双链]]` 网状知识网络。
+
+### 2. `book-review` (高穿透读后感与书评生成)
+- **定位**：拒绝“中学语文课代表复述”，坚持“表面聊书，实解读者生活内耗”，遵循沉静温和、反爹味人设。
+- **三大专属模具**：
+  - 📱 **小红书深度图文模具**：双行反差标题 + 痛点直击 + 3个顿悟点 + 治愈收尾。
+  - 🧵 **Threads / X 4帖串帖模具**：1/4 Hook引子 ➔ 2/4 认知反转 ➔ 3/4 行动解法 ➔ 4/4 温柔收尾（符合 ≤500 字一键分帖）。
+  - 📰 **微信公众号 / 博客深度随笔模具**：生活散文引入 + 概念解构 + 现实困境剖析 + 沉浸随笔。
 
 ---
 
@@ -41,8 +60,11 @@ description: 将 EPUB 电子书按章节精确提取并切分为单层平铺的�
 # 1. 主流程：标准平铺纯净提取 EPUB 电子书
 ~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/epub-to-markdown/scripts/extract_chapters.py "<EPUB_FILE_PATH>" -o "<OUTPUT_DIR>"
 
-# 2. 为已提取的书籍搭建写作原料库骨架
+# 2. 为已提取的书籍搭建写作原料库骨架 (extract-insights)
 ~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/epub-to-markdown/scripts/extract_insights.py "<BOOK_DIR>"
+
+# 3. 为已提取的书籍生成社交媒体读后感草稿脚手架 (book-review)
+~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/epub-to-markdown/scripts/generate_review.py "<BOOK_DIR>" --platform all --topic "走出内耗"
 ```
 
 ### 参数说明
@@ -51,6 +73,8 @@ description: 将 EPUB 电子书按章节精确提取并切分为单层平铺的�
 - `-o, --output`: 目标输出目录。如不指定，默认在原 EPUB 文件所在目录下生成以书名命名的同名文件夹。
 - `--keep-all`: 可选，保留版权页、空扉页与出版社介绍等全部附属页面。
 - `--no-images`: 可选，跳过图片资源的提取。
+- `--platform`: 读后感目标平台，可选 `xhs`（小红书）、`threads`（Threads/X）、`wechat`（微信公众号）、`all`（生成全部）。
+- `--topic`: 读后感探讨的主题或痛点关键字。
 
 ## 典型输出目录结构
 
@@ -64,8 +88,14 @@ description: 将 EPUB 电子书按章节精确提取并切分为单层平铺的�
 ├── 01_导论.md
 ├── 02_第一部_我的历程_探索.md
 ├── 03_第二部_生活原则_拥抱现实.md
-└── insights/               # 👈 写作原料库（调用子技能产生）
-    ├── 00_全书爆款选题与反直觉库.md
-    ├── 00_全书高穿透金句大全.md
-    └── 02_第一部_我的历程_探索_原料卡.md
+├── insights/               # 👈 写作黄金原料库（调用 extract-insights 产生）
+│   ├── 00_全书爆款选题与反直觉库.md
+│   ├── 00_全书高穿透金句大全.md
+│   ├── 00_读者现实痛点与对号入座索引.md
+│   ├── 00_全书核心概念与思维模型图谱.md
+│   └── 02_第一部_我的历程_探索_原料卡.md
+└── reviews/                # 👈 高赞读后感与书评库（调用 book-review 产生）
+    ├── review_xhs_20261005.md
+    ├── review_threads_20261005.md
+    └── review_wechat_20261005.md
 ```
