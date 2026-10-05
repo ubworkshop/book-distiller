@@ -1,19 +1,21 @@
 # Book Distiller (书籍蒸馏器)
 
-> Precise chapter-by-chapter EPUB extraction to clean, flat Markdown documents with modular sub-skills (extract-insights: 4D raw materials + Obsidian graph; book-review: multi-platform high-resonance book reviews + full lineage & provenance connection graph), smart noise filtering, YAML frontmatter, image assets, and structured indexes.
+> Precise chapter-by-chapter EPUB extraction to clean, flat Markdown documents with modular sub-skills (extract-insights: 4D raw materials + Obsidian graph; book-review: 4-stage modular mental flow menu + dual-file clean post and full provenance graph), smart noise filtering, YAML frontmatter, image assets, and structured indexes.
 
-An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone Markdown chapters, preserving image assets and hierarchy, building `README.md` and `SUMMARY.md` catalogs for Obsidian, Notion, or GitBook, extracting creator insights, and generating multi-platform book reviews with full design provenance.
+An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone Markdown chapters, preserving image assets and hierarchy, building `README.md` and `SUMMARY.md` catalogs for Obsidian, Notion, or GitBook, extracting creator insights, and orchestrating a human-in-the-loop writing pipeline with a 4-stage mental flow builder.
 
 ## ✨ Features
 
 - **Strictly Flat Directory Structure**: All chapters are extracted side-by-side into a single folder. No confusing nested directories or broken relative links.
-- **Modular Sub-skills (Advanced Creator Suite v2.8)**:
+- **Modular Sub-skills (Advanced Creator Suite v2.9)**:
   - ⚡️ **`extract-insights`**: Extracts Contrarian Hooks (with 1-5 ⭐ viral ratings and 🔥 Top 5 pinned topics), Concrete Stories/Cases, Actionable Checklists, High-resonance Quotes, Obsidian Concept Graph (`[[Wikilinks]]`), and Symptom Mapping.
-  - ✍️ **`book-review`**: Weaves extracted raw materials into platform-native, high-resonance book reviews (Xiaohongshu visual cards, Threads 4-post threads, WeChat in-depth essays) with a calm, empathetic, anti-preachy voice.
-  - 🧬 **Full Lineage & Provenance Blueprint (完整血统溯源与联系图谱)**: Accompanying every review is a Mermaid design connection graph, a source-lineage mapping table (tying hook, painpoint, inversion, checklist, and quote back to the exact book chapter and insights card), and Obsidian concept graph wikilinks.
+  - 🧩 **`4-Stage Mental Flow Selector`**: Before drafting, presents an inspiration menu across 4 key flow stages (Hook ➔ Inversion ➔ Action ➔ Ending), allowing creators to freely mix-and-match modular building blocks (e.g. `1B + 2A + 3A + 4A`).
+  - ✍️ **`book-review (Dual-file Delivery)`**: 
+    - `review_{platform}.md`: 100% clean, publish-ready post (Xiaohongshu, Threads, WeChat).
+    - `review_{platform}_provenance.md`: Standalone design provenance archive with Mermaid flow chart, source lineage table, and concept wikilinks.
 - **Smart Noise & Copyright Filtering**: Automatically detects and skips publisher copyright pages, empty title pages, redundant in-book TOCs, and broken internal XHTML anchors. Use `--keep-all` if you prefer to retain them.
 - **Sequential Indexing**: Consecutively numbers chapters (`01_xxx.md`, `02_xxx.md`) without missing-number gaps.
-- **YAML Frontmatter Injection**: Embeds structured metadata into every chapter header (`book`, `author`, `chapter_index`, `word_count`, `read_time`, `tags`) — tailored for Obsidian and Notion property databases.
+- **YAML Frontmatter Injection**: Embeds structured metadata into every chapter header (`book`, `author`, `chapter_index`, `word_count`, `read_time`, `tags`).
 - **Prev / Next Chapter Navigation**: Adds bidirectional `⬅️ Previous Chapter | 📑 Table of Contents | ➡️ Next Chapter` links at the bottom of every page with rock-solid relative paths (`./01_xxx.md`).
 - **Image & Asset Extraction**: Automatically exports book covers, diagrams, and illustrations to `./assets/` and updates relative paths (`![](./assets/xxx.png)`).
 
@@ -29,8 +31,10 @@ flowchart LR
     S1 --> Master[insights/ Master Libraries]
     Master --> S2[Sub-skill: book-review]
     Chapters --> S2
-    S2 --> Reviews[reviews/ Multi-platform Posts]
-    S2 --> Provenance[🧬 Full Lineage & Provenance Graph]
+    S2 --> Menu[flow_menu.md: 4-Stage Flow Menu]
+    Menu --> Custom[Creator Mix & Match]
+    Custom --> Post[review_platform.md: Clean Post]
+    Custom --> Prov[review_platform_provenance.md: Full Provenance]
 ```
 
 ### 1. `extract-insights` (写作黄金原料库与灵感总库)
@@ -43,13 +47,16 @@ Refuses generic summaries. Focuses purely on extracting high-yield creator asset
 5. 🔗 **Obsidian Wikilinks**: Embeds `[[Concept]]` links for interactive graph visualization.
 6. 🎯 **Symptom Mapping**: Connects reader pain points directly to the book's chapter solutions.
 
-### 2. `book-review` (高穿透读后感与完整血统溯源)
+### 2. `book-review` (四段心流人机共创与双文件输出)
 
-Transforms raw book material into ready-to-publish social media book reviews:
-- 📱 **Xiaohongshu (RED)**: Dual-line hook title + relatable life struggle + 3 core epiphany points + aesthetic cards.
-- 🧵 **Threads / X**: 4-post mental flow (1/4 Hook ➔ 2/4 Mindset Inversion ➔ 3/4 Actionable Habit ➔ 4/4 Warm Closing), strictly under 500 characters per post.
-- 📰 **WeChat Official Account / Blog**: Deep reflective prose linking everyday scenarios to the book's foundational philosophy.
-- 🧬 **Lineage & Provenance Blueprint**: Every review includes a Mermaid design graph, an element-by-element source lineage table, and concept wikilinks.
+1. **4-Stage Flow Modular Menu**:
+   - **Stage 1 (Hook / Painpoint)**: [1A Heartfelt scene] / [1B Contrarian slap] / [1C Soul question]
+   - **Stage 2 (Inversion / Deconstruction)**: [2A Systemic root cause] / [2B Fear & motive analysis] / [2C High-dimensional model]
+   - **Stage 3 (Action / Checklist)**: [3A Micro-habit slice] / [3B Red line rule] / [3C 3-step loop]
+   - **Stage 4 (Ending / Warm Closing)**: [4A Warm encouragement] / [4B Piercing quote] / [4C Open question]
+2. **Dual-file Output**:
+   - Clean Post (`review_{platform}.md`): Ready to copy & paste.
+   - Provenance (`review_{platform}_provenance.md`): Full lineage table & Mermaid chart.
 
 ---
 
@@ -69,8 +76,8 @@ python3 scripts/extract_chapters.py "/path/to/book.epub"
 # 2. Setup the 4 master insights libraries for an extracted book
 python3 scripts/extract_insights.py "/path/to/extracted_book_folder"
 
-# 3. Generate book review scaffolding with full provenance graph
-python3 scripts/generate_review.py "/path/to/extracted_book_folder" --platform all --topic "职场内耗与边界感"
+# 3. Generate 4-stage flow modular menu and draft posts
+python3 scripts/generate_review.py "/path/to/extracted_book_folder" --platform xhs --combo "1B+2A+3A+4A"
 ```
 
 ### 3. Agent Skill Integration
@@ -102,9 +109,9 @@ Book_Notes/
 │   ├── 01_Introduction_原料卡.md
 │   └── ...
 └── reviews/                                  # 👈 Sub-skill: book-review
-    ├── review_xhs_20261005_120000.md        # 小红书高赞图文 + 🧬 完整血统溯源
-    ├── review_threads_20261005_120000.md    # Threads 4 帖心流 + 🧬 完整血统溯源
-    └── review_wechat_20261005_120000.md     # 公众号深度随笔 + 🧬 完整血统溯源
+    ├── flow_menu_20261006_120000.md          # 👈 四段心流积木备选菜单
+    ├── review_xhs_20261006_120000.md         # 👈 纯净发布正文
+    └── review_xhs_20261006_120000_provenance.md # 👈 独立血统溯源与联系图谱
 ```
 
 ## 📄 License
