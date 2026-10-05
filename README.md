@@ -1,15 +1,16 @@
 # epub-to-markdown
 
-> Precise chapter-by-chapter EPUB extraction to clean, flat Markdown documents with modular sub-skills (extract-insights: 4D raw materials + Obsidian graph; book-review: multi-platform high-resonance book reviews for Xiaohongshu, Threads, WeChat), smart noise filtering, YAML frontmatter, image assets, and structured indexes.
+> Precise chapter-by-chapter EPUB extraction to clean, flat Markdown documents with modular sub-skills (extract-insights: 4D raw materials + Obsidian graph; book-review: multi-platform high-resonance book reviews + full lineage & provenance connection graph), smart noise filtering, YAML frontmatter, image assets, and structured indexes.
 
 An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone Markdown chapters, preserving image assets and hierarchy, and building `README.md` and `SUMMARY.md` catalogs for Obsidian, Notion, or GitBook.
 
 ## ✨ Features
 
 - **Strictly Flat Directory Structure**: All chapters are extracted side-by-side into a single folder. No confusing nested directories or broken relative links.
-- **Modular Sub-skills (Advanced Creator Suite v2.6)**:
+- **Modular Sub-skills (Advanced Creator Suite v2.7)**:
   - ⚡️ **`extract-insights`**: Extracts Contrarian Hooks (with 1-5 ⭐ viral ratings and 🔥 Top 5 pinned topics), Concrete Stories/Cases, Actionable Checklists, High-resonance Quotes, Obsidian Concept Graph (`[[Wikilinks]]`), and Symptom Mapping.
-  - ✍️ **`book-review`**: Weaves extracted raw materials into platform-native, high-resonance book reviews (Xiaohongshu visual cards, Threads 4-post threads, WeChat in-depth essays). Rejects boring textbook-style plot summaries in favor of untangling real-life reader struggles with a calm, empathetic, anti-preachy voice.
+  - ✍️ **`book-review`**: Weaves extracted raw materials into platform-native, high-resonance book reviews (Xiaohongshu visual cards, Threads 4-post threads, WeChat in-depth essays) with a calm, empathetic, anti-preachy voice.
+  - 🧬 **Full Lineage & Provenance Blueprint (完整血统溯源与联系图谱)**: Accompanying every review is a Mermaid design connection graph, a source-lineage mapping table (tying hook, painpoint, inversion, checklist, and quote back to the exact book chapter and insights card), and Obsidian concept graph wikilinks.
 - **Smart Noise & Copyright Filtering**: Automatically detects and skips publisher copyright pages, empty title pages, redundant in-book TOCs, and broken internal XHTML anchors. Use `--keep-all` if you prefer to retain them.
 - **Sequential Indexing**: Consecutively numbers chapters (`01_xxx.md`, `02_xxx.md`) without missing-number gaps.
 - **YAML Frontmatter Injection**: Embeds structured metadata into every chapter header (`book`, `author`, `chapter_index`, `word_count`, `read_time`, `tags`) — tailored for Obsidian and Notion property databases.
@@ -29,6 +30,7 @@ flowchart LR
     Master --> S2[Sub-skill: book-review]
     Chapters --> S2
     S2 --> Reviews[reviews/ Multi-platform Posts]
+    S2 --> Provenance[🧬 Full Lineage & Provenance Graph]
 ```
 
 ### 1. `extract-insights` (写作黄金原料库与灵感总库)
@@ -41,12 +43,13 @@ Refuses generic summaries. Focuses purely on extracting high-yield creator asset
 5. 🔗 **Obsidian Wikilinks**: Embeds `[[Concept]]` links for interactive graph visualization.
 6. 🎯 **Symptom Mapping**: Connects reader pain points directly to the book's chapter solutions.
 
-### 2. `book-review` (高穿透读后感与书评生成器)
+### 2. `book-review` (高穿透读后感与完整血统溯源)
 
 Transforms raw book material into ready-to-publish social media book reviews:
 - 📱 **Xiaohongshu (RED)**: Dual-line hook title + relatable life struggle + 3 core epiphany points + aesthetic cards.
 - 🧵 **Threads / X**: 4-post mental flow (1/4 Hook ➔ 2/4 Mindset Inversion ➔ 3/4 Actionable Habit ➔ 4/4 Warm Closing), strictly under 500 characters per post.
 - 📰 **WeChat Official Account / Blog**: Deep reflective prose linking everyday scenarios to the book's foundational philosophy.
+- 🧬 **Lineage & Provenance Blueprint**: Every review includes a Mermaid design graph, an element-by-element source lineage table, and concept wikilinks.
 
 ---
 
@@ -66,7 +69,7 @@ python3 scripts/extract_chapters.py "/path/to/book.epub"
 # 2. Setup the 4 master insights libraries for an extracted book
 python3 scripts/extract_insights.py "/path/to/extracted_book_folder"
 
-# 3. Generate book review scaffolding for social media (xhs / threads / wechat / all)
+# 3. Generate book review scaffolding with full provenance graph
 python3 scripts/generate_review.py "/path/to/extracted_book_folder" --platform all --topic "职场内耗与边界感"
 ```
 
@@ -78,12 +81,6 @@ Clone this repository into your agent's skill directory:
 # For Antigravity / Claude Code
 git clone https://github.com/ubworkshop/epub-to-markdown.git ~/.gemini/config/skills/epub-to-markdown
 ```
-
-Then trigger via natural language:
-- *"Extract all chapters from this book: `Principles.epub`"*
-- *"Batch extract all insights and generate the 4 master libraries for this book folder"*
-- *"Write an empathetic Xiaohongshu book review based on the insights in this folder"*
-- *"Create a 4-post Threads thread addressing mental burnout using concepts from Chapter 3"*
 
 ## 📂 Output Structure
 
@@ -105,9 +102,9 @@ Book_Notes/
 │   ├── 01_Introduction_原料卡.md
 │   └── ...
 └── reviews/                                  # 👈 Sub-skill: book-review
-    ├── review_xhs_20261005_120000.md        # 小红书高赞图文笔记
-    ├── review_threads_20261005_120000.md    # Threads 4 帖心流串帖
-    └── review_wechat_20261005_120000.md     # 公众号深度随笔
+    ├── review_xhs_20261005_120000.md        # 小红书高赞图文 + 🧬 完整血统溯源
+    ├── review_threads_20261005_120000.md    # Threads 4 帖心流 + 🧬 完整血统溯源
+    └── review_wechat_20261005_120000.md     # 公众号深度随笔 + 🧬 完整血统溯源
 ```
 
 ## 📄 License

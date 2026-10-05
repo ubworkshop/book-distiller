@@ -1,11 +1,11 @@
 ---
 name: epub-to-markdown
-description: 将 EPUB 电子书按章节精确提取并切分为单层平铺的独立 Markdown 文档。支持挂载子技能（Sub-skills，如 extract-insights 提取 4 类写作黄金原料、book-review 生成多平台高赞读后感与书评）、智能过滤版权与无意义杂质、自动注入 YAML Frontmatter 元数据（书名、作者、字数、阅读时长、标签）、章节底部双向连续翻页导航、提取内嵌配图与重定向相对路径，并自动生成 README.md 和 SUMMARY.md 索引目录（完美适配 Obsidian、Notion 及 GitBook）。当用户提到"提取epub"、"epub转markdown"、"epub拆分章节"、"电子书拆解"、"epub 章节导出"、"提取黄金原料"、"写读后感"、"小红书书评"等需求时触发。
+description: 将 EPUB 电子书按章节精确提取并切分为单层平铺的独立 Markdown 文档。支持挂载子技能（Sub-skills，如 extract-insights 提取 4 类写作黄金原料、book-review 生成多平台高赞读后感、完整血统溯源与联系图谱）、智能过滤版权与无意义杂质、自动注入 YAML Frontmatter 元数据（书名、作者、字数、阅读时长、标签）、章节底部双向连续翻页导航、提取内嵌配图与重定向相对路径，并自动生成 README.md 和 SUMMARY.md 索引目录（完美适配 Obsidian、Notion 及 GitBook）。当用户提到"提取epub"、"epub转markdown"、"epub拆分章节"、"电子书拆解"、"epub 章节导出"、"提取黄金原料"、"写读后感"、"小红书书评"、"血统溯源"、"联系图谱"等需求时触发。
 ---
 
-# EPUB 章节转 Markdown Skill (v2.6 模块化创作子技能版)
+# EPUB 章节转 Markdown Skill (v2.7 模块化创作与溯源图谱版)
 
-将 EPUB 电子书按章节结构自动解包、清洗，并转成一套规范的单层平铺独立 Markdown 知识库；同时向下游串联子技能流水线，实现从**书籍切分 ➔ 黄金原料挖掘 ➔ 多平台高穿透读后感生成**的完整工作流。
+将 EPUB 电子书按章节结构自动解包、清洗，并转成一套规范的单层平铺独立 Markdown 知识库；同时向下游串联子技能流水线，实现从**书籍切分 ➔ 黄金原料挖掘 ➔ 多平台读后感生成 ➔ 完整血统溯源与联系图谱**的完整闭环。
 
 ## 核心架构与功能
 
@@ -31,9 +31,8 @@ flowchart TD
     S1 --> Insights[insights/ 四大黄金原料总库]
     Insights --> S2[Sub-skill: book-review]
     Chapters --> S2
-    S2 --> XHS[小红书深度图文笔记]
-    S2 --> Threads[Threads/X 4帖心流串帖]
-    S2 --> WeChat[公众号/博客深度随笔]
+    S2 --> Reviews[社交平台读后感]
+    S2 --> Provenance[🧬 完整血统溯源与设计联系图谱]
 ```
 
 ### 1. `extract-insights` (4+2 黄金原料提取)
@@ -45,12 +44,16 @@ flowchart TD
   - 🎯 **读者痛点对号入座**：直击现实烦恼的病症映射索引。
   - 🧠 **概念双链图谱**：Obsidian `[[概念双链]]` 网状知识网络。
 
-### 2. `book-review` (高穿透读后感与书评生成)
+### 2. `book-review` (高穿透读后感与完整血统溯源)
 - **定位**：拒绝“中学语文课代表复述”，坚持“表面聊书，实解读者生活内耗”，遵循沉静温和、反爹味人设。
 - **三大专属模具**：
   - 📱 **小红书深度图文模具**：双行反差标题 + 痛点直击 + 3个顿悟点 + 治愈收尾。
   - 🧵 **Threads / X 4帖串帖模具**：1/4 Hook引子 ➔ 2/4 认知反转 ➔ 3/4 行动解法 ➔ 4/4 温柔收尾（符合 ≤500 字一键分帖）。
   - 📰 **微信公众号 / 博客深度随笔模具**：生活散文引入 + 概念解构 + 现实困境剖析 + 沉浸随笔。
+- **🧬 伴生输出：完整血统溯源与联系图谱 (Provenance & Lineage Blueprint)**：
+  - 📊 **创作逻辑联系图谱 (Mermaid)**：清晰呈现从原著章节到社交文案的演进网络。
+  - 📋 **核心要素血统溯源表**：逐项对齐原著出处、原料卡与创作心理学意图（打破防御、建立共鸣、促成收藏等）。
+  - 🧠 **概念双链关联**：与 Obsidian 知识网络无缝挂载。
 
 ---
 
@@ -63,18 +66,9 @@ flowchart TD
 # 2. 为已提取的书籍搭建写作原料库骨架 (extract-insights)
 ~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/epub-to-markdown/scripts/extract_insights.py "<BOOK_DIR>"
 
-# 3. 为已提取的书籍生成社交媒体读后感草稿脚手架 (book-review)
+# 3. 为已提取的书籍生成社交媒体读后感与血统溯源草稿脚手架 (book-review)
 ~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/epub-to-markdown/scripts/generate_review.py "<BOOK_DIR>" --platform all --topic "走出内耗"
 ```
-
-### 参数说明
-
-- `<EPUB_FILE_PATH>`: EPUB 文件的绝对路径或相对路径（必须项）。
-- `-o, --output`: 目标输出目录。如不指定，默认在原 EPUB 文件所在目录下生成以书名命名的同名文件夹。
-- `--keep-all`: 可选，保留版权页、空扉页与出版社介绍等全部附属页面。
-- `--no-images`: 可选，跳过图片资源的提取。
-- `--platform`: 读后感目标平台，可选 `xhs`（小红书）、`threads`（Threads/X）、`wechat`（微信公众号）、`all`（生成全部）。
-- `--topic`: 读后感探讨的主题或痛点关键字。
 
 ## 典型输出目录结构
 
@@ -83,8 +77,6 @@ flowchart TD
 ├── README.md               # 书籍元数据与完整正文平铺清单
 ├── SUMMARY.md              # 导航树索引
 ├── assets/                 # 提取出的全部插图、封面
-│   ├── cover.jpg
-│   └── figure_01.png
 ├── 01_导论.md
 ├── 02_第一部_我的历程_探索.md
 ├── 03_第二部_生活原则_拥抱现实.md
@@ -94,8 +86,8 @@ flowchart TD
 │   ├── 00_读者现实痛点与对号入座索引.md
 │   ├── 00_全书核心概念与思维模型图谱.md
 │   └── 02_第一部_我的历程_探索_原料卡.md
-└── reviews/                # 👈 高赞读后感与书评库（调用 book-review 产生）
-    ├── review_xhs_20261005.md
-    ├── review_threads_20261005.md
-    └── review_wechat_20261005.md
+└── reviews/                # 👈 读后感与溯源图谱库（调用 book-review 产生）
+    ├── review_xhs_20261005.md       # 正文 + 🧬 完整血统溯源与联系图谱
+    ├── review_threads_20261005.md   # 4帖串帖 + 🧬 完整血统溯源与联系图谱
+    └── review_wechat_20261005.md    # 深度随笔 + 🧬 完整血统溯源与联系图谱
 ```

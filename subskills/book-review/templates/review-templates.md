@@ -83,3 +83,59 @@
 
 **【第五部分：温柔托举 · 给予力量】**
 (以深夜好友聊天的姿态收尾，给读者释怀与前行的底气，配上最有穿透力的金句...)
+
+---
+
+## 模具 D：完整血统溯源与联系图谱 (Provenance & Lineage Blueprint)
+
+> **设计宗旨**：让每一次创作都不是空中楼阁，清晰展示文章每一句话背后的原著出处、心理学意图与知识图谱流动。
+
+```markdown
+---
+### 🧬 完整血统溯源与设计联系图谱 (Lineage & Provenance)
+
+#### 1. 📊 创作逻辑联系图谱
+```mermaid
+graph TD
+    subgraph 原著知识血统 [原著核心血统]
+        C1["原章节: [[{source_chapter}]]"]
+        M1["思维模型: [[{mental_model}]]"]
+        Q1["核心原文: '{book_original_quote}'"]
+    end
+
+    subgraph 原料库转化 [insights/ 黄金原料]
+        H1["⚡️ 反直觉 Hook: {hook_concept}"]
+        P1["🎯 读者现实痛点: {reader_painpoint}"]
+        A1["🛠️ 落地微清单: {actionable_step}"]
+    end
+
+    subgraph 社交表达输出 [读后感表达心流]
+        PostHook["开篇: 破除大众盲区 / 痛点共鸣"]
+        PostInversion["中段: 借书解困 / 认知刷新"]
+        PostAction["后段: 极简行动解法"]
+        PostEnding["结尾: 灵魂金句温柔收尾"]
+    end
+
+    C1 --> M1
+    M1 --> H1
+    C1 --> Q1
+    P1 --> PostHook
+    H1 --> PostInversion
+    A1 --> PostAction
+    Q1 --> PostEnding
+```
+
+#### 2. 📋 核心要素血统溯源表
+| 文章模块 / 关键文案 | 原著章节与出处 | insights 原料卡映射 | 创作者意图与心理学设计 |
+| :--- | :--- | :--- | :--- |
+| **标题 / Hook** | 《{book_title}》{source_chapter_name} | `00_全书爆款选题与反直觉库.md` | **打破认知防御**：用生活常见误区制造反差好奇 |
+| **痛点唤醒** | 原书关于{chapter_topic}的论述 | `00_读者现实痛点与对号入座索引.md` | **建立同盟共情**：描摹具体疲惫场景，消除说教感 |
+| **认知反转** | 原书核心论证第 X 节 | `00_全书核心概念与思维模型图谱.md` | **提供新解释框架**：将个人内疚归因于认知模型缺陷 |
+| **行动指南** | 原书案例中的行动总结 | 对应章节原料卡第 3 节 (微清单) | **促成收藏与执行**：给低阻力、今天下班就能做的一件事 |
+| **点睛金句** | 原书第 X 页原文 | `00_全书高穿透金句大全.md` | **驱动转发与共鸣**：深夜治愈底色，让读者产生分享欲 |
+
+#### 3. 🧠 关联知识双链 (Obsidian Wikilinks)
+- [[{mental_model_1}]]
+- [[{mental_model_2}]]
+- [[{source_chapter_link}]]
+```
