@@ -97,19 +97,19 @@
 #### 1. 📊 创作逻辑联系图谱
 ```mermaid
 graph TD
-    subgraph 原著知识血统 [原著核心血统]
+    subgraph Provenance ["原著核心血统"]
         C1["原章节: [[{source_chapter}]]"]
         M1["思维模型: [[{mental_model}]]"]
         Q1["核心原文: '{book_original_quote}'"]
     end
 
-    subgraph 原料库转化 [insights/ 黄金原料]
+    subgraph RawMaterials ["insights/ 黄金原料"]
         H1["⚡️ 反直觉 Hook: {hook_concept}"]
         P1["🎯 读者现实痛点: {reader_painpoint}"]
         A1["🛠️ 落地微清单: {actionable_step}"]
     end
 
-    subgraph 社交表达输出 [读后感表达心流]
+    subgraph PostFlow ["读后感表达心流"]
         PostHook["开篇: 破除大众盲区 / 痛点共鸣"]
         PostInversion["中段: 借书解困 / 认知刷新"]
         PostAction["后段: 极简行动解法"]

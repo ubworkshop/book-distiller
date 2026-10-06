@@ -27,18 +27,29 @@ description: Book Distiller (书籍蒸馏器) - 电子书章节拆解、黄金�
 
 ```mermaid
 flowchart TD
-    EPUB[原始 EPUB 电子书] --> Main[Book Distiller 核心引擎]
-    Main --> Chapters[单层平铺章节 Markdown]
-    Chapters --> S1[Sub-skill: extract-insights]
-    S1 --> Brief[📑 00_全书一页纸决策简报.md]
-    S1 --> Insights[insights/ 四大黄金原料总库 (断点续传)]
-    Insights --> S2[Sub-skill: book-review]
-    Chapters --> S2
-    S2 --> Matrix[00_全书书评创作矩阵规划.md]
-    Matrix --> Menu[🧩 四段心流积木自由搭配菜单]
-    Menu --> Selection[创作者挑选心流组合]
-    Selection --> Reviews[平台纯净正文 review_platform_slug.md]
-    Selection --> Provenance[🧬 独立血统溯源 review_platform_slug_provenance.md]
+    subgraph Ingest ["1. 提取与清洗"]
+        EPUB["原始 EPUB 电子书"] --> Main["Book Distiller 核心引擎"]
+        Main --> Chapters["单层平铺章节 Markdown"]
+    end
+
+    subgraph Distill ["2. 蒸馏与决策"]
+        Chapters --> S1["子技能: extract-insights"]
+        S1 --> Brief["📑 00_全书一页纸决策简报.md"]
+        S1 --> Insights["insights/ 四大黄金原料总库 (断点续传)"]
+    end
+
+    subgraph Create ["3. 矩阵与心流创作"]
+        Insights --> S2["子技能: book-review"]
+        Chapters --> S2
+        S2 --> Matrix["00_全书书评创作矩阵规划.md"]
+        Matrix --> Menu["🧩 四段心流积木自由搭配菜单"]
+        Menu --> Selection["创作者挑选心流组合"]
+    end
+
+    subgraph Output ["4. 语义化双文件交付"]
+        Selection --> Reviews["纯净正文: review_platform_slug.md"]
+        Selection --> Provenance["血统溯源: review_platform_slug_provenance.md"]
+    end
 ```
 
 ### 1. `extract-insights` (4+2 黄金原料提取 · 一页纸决策简报版)

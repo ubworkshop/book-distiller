@@ -26,19 +26,30 @@ An Agent Skill for parsing and splitting `.epub` ebooks into clean, standalone M
 ## 🧩 Sub-skills Ecosystem (子技能生态)
 
 ```mermaid
-flowchart LR
-    EPUB[EPUB eBook] --> Main[Book Distiller Engine]
-    Main --> Chapters[Flat Markdown Chapters]
-    Chapters --> S1[Sub-skill: extract-insights]
-    S1 --> Brief[00_全书一页纸决策简报.md]
-    S1 --> Master[insights/ Master Libraries (Cached)]
-    Master --> S2[Sub-skill: book-review]
-    Chapters --> S2
-    S2 --> Matrix[Review Matrix: 4-6 Topics Planning]
-    Matrix --> Menu[4-Stage Flow Modular Menu]
-    Menu --> Custom[Creator Mix & Match]
-    Custom --> Post[review_platform_slug.md: Clean Post]
-    Custom --> Prov[review_platform_slug_provenance.md: Full Provenance]
+flowchart TD
+    subgraph Ingest ["1. 提取与清洗"]
+        EPUB["EPUB 电子书"] --> Main["Book Distiller 核心引擎"]
+        Main --> Chapters["单层平铺纯净章节 .md"]
+    end
+
+    subgraph Distill ["2. 蒸馏与决策"]
+        Chapters --> S1["子技能: extract-insights"]
+        S1 --> Brief["📑 00_全书一页纸决策简报.md"]
+        S1 --> Master["insights/ 四大黄金原料总库 (断点续传)"]
+    end
+
+    subgraph Create ["3. 矩阵与心流创作"]
+        Master --> S2["子技能: book-review"]
+        Chapters --> S2
+        S2 --> Matrix["00_全书书评创作矩阵规划.md"]
+        Matrix --> Menu["🧩 四段心流积木自由搭配菜单"]
+        Menu --> Custom["创作者自由挑选组合"]
+    end
+
+    subgraph Output ["4. 语义化双文件交付"]
+        Custom --> Post["纯净正文: review_platform_slug.md"]
+        Custom --> Prov["血统溯源: review_platform_slug_provenance.md"]
+    end
 ```
 
 ---
