@@ -1,13 +1,13 @@
 ---
 name: book-distiller
-description: Book Distiller (书籍蒸馏器) - 电子书章节拆解、黄金原料萃取与多平台书评创作引擎。将 EPUB 电子书按章节精确提取并切分为单层平铺的独立 Markdown 文档。支持挂载子技能（extract-insights 提取 4 类写作黄金原料与思维模型图谱；book-review 提供"四段心流自由搭配菜单"，让创作者自由拼配 Hook痛点/认知反转/极简解法/灵魂收尾后再成文，并输出独立血统溯源与联系图谱）。智能过滤版权与无意义杂质、自动注入 YAML Frontmatter、章节翻页导航、配图提取，并生成 README.md 和 SUMMARY.md 索引目录。当用户提到"book-distiller"、"书籍蒸馏"、"提取epub"、"epub转markdown"、"挑选心流"、"四段心流"、"写读后感"、"小红书书评"、"血统溯源"等需求时触发。
+description: Book Distiller (书籍蒸馏器) - 电子书章节拆解、黄金原料萃取与多平台书评创作引擎。将 EPUB 电子书按章节精确提取并切分为单层平铺的独立 Markdown 文档。支持挂载子技能（extract-insights 提取 4 类写作黄金原料、断点续传与增量合并；book-review 提供"全书书评创作矩阵规划"、"四段心流自由搭配菜单"与"语义化主题 Slug 命名"，并输出独立血统溯源图谱）。智能过滤版权与无意义杂质、自动注入 YAML Frontmatter、章节翻页导航、配图提取，并生成 README.md 和 SUMMARY.md 索引目录。当用户提到"book-distiller"、"书籍蒸馏"、"提取epub"、"epub转markdown"、"书评矩阵"、"挑选心流"、"四段心流"、"写读后感"、"小红书书评"、"血统溯源"等需求时触发。
 ---
 
-# Book Distiller (书籍蒸馏器 v2.9)
+# Book Distiller (书籍蒸馏器 v3.0 创作者矩阵终极版)
 
-**从电子书章节拆解、黄金原料萃取到四段心流自由搭配与深度创作的一体化引擎。**
+**从电子书章节拆解、黄金原料萃取到全书书评创作矩阵与四段心流自由搭配的一体化引擎。**
 
-将 EPUB 电子书按章节结构自动解包、清洗，并转成一套规范的单层平铺独立 Markdown 知识库；向下游串联完整的创作者流水线，实现从**书籍切分 ➔ 4D黄金原料挖掘 ➔ 四段心流积木自由搭配 ➔ 多平台读后感生成 ➔ 独立血统溯源图谱**的完整闭环。
+将 EPUB 电子书按章节结构自动解包、清洗，并转成一套规范的单层平铺独立 Markdown 知识库；向下游串联完整的创作者流水线，实现从**书籍切分 ➔ 4D黄金原料挖掘(断点续传) ➔ 全书书评创作矩阵 ➔ 四段心流积木自由搭配 ➔ 语义化 Slug 纯净正文与独立溯源图谱**的完整闭环。
 
 ---
 
@@ -30,16 +30,17 @@ flowchart TD
     EPUB[原始 EPUB 电子书] --> Main[Book Distiller 核心引擎]
     Main --> Chapters[单层平铺章节 Markdown]
     Chapters --> S1[Sub-skill: extract-insights]
-    S1 --> Insights[insights/ 四大黄金原料总库]
+    S1 --> Insights[insights/ 四大黄金原料总库 (断点续传)]
     Insights --> S2[Sub-skill: book-review]
     Chapters --> S2
-    S2 --> Menu[🧩 四段心流积木自由搭配菜单]
+    S2 --> Matrix[00_全书书评创作矩阵规划.md]
+    Matrix --> Menu[🧩 四段心流积木自由搭配菜单]
     Menu --> Selection[创作者挑选心流组合]
-    Selection --> Reviews[平台纯净正文 .md]
-    Selection --> Provenance[🧬 独立血统溯源与图谱 _provenance.md]
+    Selection --> Reviews[平台纯净正文 review_platform_slug.md]
+    Selection --> Provenance[🧬 独立血统溯源 review_platform_slug_provenance.md]
 ```
 
-### 1. `extract-insights` (4+2 黄金原料提取)
+### 1. `extract-insights` (4+2 黄金原料提取 · 断点续传版)
 - **定位**：拒绝无意义的全文大意总结，专门从切分好的章节中挖掘自媒体与长文创作的 4 类黄金原料：
   - ⚡️ **反直觉认知 (Hook 灵感)**：打破常识误区，提炼 3 种爆款钩子（含 ⭐⭐⭐⭐⭐ 爆款评级）。
   - 📖 **故事与微案例 (论据素材)**：具象人物冲突与破局案例。
@@ -47,17 +48,19 @@ flowchart TD
   - 💎 **高穿透金句 (社交配图)**：情绪共鸣强烈的金句与适用语境。
   - 🎯 **读者痛点对号入座**：直击现实烦恼的病症映射索引。
   - 🧠 **概念双链图谱**：Obsidian `[[概念双链]]` 网状知识网络。
+  - 🔄 **断点续传与增量合并**：自动跳过已完成章节，支持 `--sync` 一键去重汇聚更新四大总库。
 
-### 2. `book-review` (四段心流人机共创与独立溯源)
-- **定位**：创作者主导的人机共创工坊。拒绝 AI 盲盒输出，先提供心流积木菜单，再由创作者自由搭配组合。
+### 2. `book-review` (全书书评矩阵 · 四段心流自由拼配)
+- **定位**：创作者主导的矩阵化人机共创工坊。
+- **🗺️ 全书书评创作矩阵 (Review Matrix)**：一键规划全书 4~6 篇差异化发帖选题（引流爆款篇、认知觉醒篇、深度长文篇、工具实操篇）。
 - **🧩 四段心流自由搭配菜单 (Flow Modular Menu)**：
   - **阶段 1：【Hook / 痛点引子】**（1A 扎心情境型 / 1B 认知打脸型 / 1C 灵魂发问型）
   - **阶段 2：【Inversion / 认知反转】**（2A 底层系统归因 / 2B 动机真相剖析 / 2C 视角升维置换）
   - **阶段 3：【Action / 极简解法】**（3A 微习惯切片法 / 3B 阻断红线法则 / 3C 三步闭环落地）
   - **阶段 4：【Ending / 灵魂收尾】**（4A 温暖托举祝福 / 4B 极简警醒金句 / 4C 开放留白共勉）
-- **双文件分离交付**：
-  - `review_{platform}_xxx.md`：100% 纯净可发布正文（文末仅有一行溯源链接）。
-  - `review_{platform}_xxx_provenance.md`：独立血统溯源、Mermaid 心流图谱与知识双链。
+- **🏷️ 语义化主题 Slug 双文件分离交付**：
+  - `review_{platform}_{slug}_{timestamp}.md`：100% 纯净可发布正文，带语义化主题 Slug，易于检索。
+  - `review_{platform}_{slug}_{timestamp}_provenance.md`：独立血统溯源档案、Mermaid 演化图谱与 Obsidian 概念双链。
 
 ---
 
@@ -67,31 +70,34 @@ flowchart TD
 # 1. 主流程：标准平铺纯净提取 EPUB 电子书
 ~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/book-distiller/scripts/extract_chapters.py "<EPUB_FILE_PATH>" -o "<OUTPUT_DIR>"
 
-# 2. 为已提取的书籍搭建写作原料库骨架 (extract-insights)
+# 2. 为已提取的书籍搭建写作原料库骨架 (extract-insights，支持断点续传)
 ~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/book-distiller/scripts/extract_insights.py "<BOOK_DIR>"
 
-# 3. 生成四段心流备选菜单与双文件草稿 (book-review)
-~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/book-distiller/scripts/generate_review.py "<BOOK_DIR>" --platform xhs --combo "1B+2A+3A+4A"
+# 3. 为整本书生成书评创作矩阵规划 (book-review)
+~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/book-distiller/scripts/generate_review.py "<BOOK_DIR>" --matrix
+
+# 4. 生成语义化主题 Slug 双文件读后感草稿
+~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/book-distiller/scripts/generate_review.py "<BOOK_DIR>" --platform xhs --topic "精力管理与停止内耗" --combo "1B+2A+3A+4A"
 ```
 
 ## 典型输出目录结构
 
 ```text
 输出目录/
-├── README.md               # 书籍元数据与完整正文平铺清单
-├── SUMMARY.md              # 导航树索引
-├── assets/                 # 提取出的全部插图、封面
+├── README.md                                                 # 书籍元数据与完整正文平铺清单
+├── SUMMARY.md                                                # 导航树索引
+├── assets/                                                   # 提取出的全部插图、封面
 ├── 01_导论.md
 ├── 02_第一部_我的历程_探索.md
-├── 03_第二部_生活原则_拥抱现实.md
-├── insights/               # 👈 写作黄金原料库（调用 extract-insights 产生）
+├── insights/                                                 # 👈 写作黄金原料库（支持断点续传与增量更新）
 │   ├── 00_全书爆款选题与反直觉库.md
 │   ├── 00_全书高穿透金句大全.md
 │   ├── 00_读者现实痛点与对号入座索引.md
 │   ├── 00_全书核心概念与思维模型图谱.md
 │   └── 02_第一部_我的历程_探索_原料卡.md
-└── reviews/                # 👈 读后感、心流菜单与溯源图谱库（调用 book-review 产生）
-    ├── flow_menu_20261006.md                 # 👈 四段心流积木备选菜单
-    ├── review_xhs_20261006.md                # 👈 纯净发布正文
-    └── review_xhs_20261006_provenance.md     # 👈 独立血统溯源与联系图谱
+└── reviews/                                                  # 👈 书评创作矩阵库
+    ├── 00_全书书评创作矩阵规划.md                               # 👈 全书 4~6 篇选题矩阵规划表
+    ├── flow_menu_20261006.md                                 # 👈 四段心流积木备选菜单
+    ├── review_xhs_精力管理与停止内耗_20261006.md                 # 👈 语义化 Slug 纯净正文
+    └── review_xhs_精力管理与停止内耗_20261006_provenance.md      # 👈 语义化 Slug 独立溯源图谱
 ```

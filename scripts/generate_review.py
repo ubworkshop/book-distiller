@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Book Review Generator Helper (Sub-skill: book-review v2.9)
-1. 自动生成"四段心流积木自由搭配菜单" (flow_menu.md)，供创作者自由挑选题材与心流路径。
-2. 依据选定心流生成双文件：
-   - 纯净平台排版正文 (review_{platform}.md)
-   - 独立血统溯源与联系图谱 (review_{platform}_provenance.md)
+Book Review Generator Helper (Book Distiller v3.0 创作者矩阵版)
+1. 全书书评创作矩阵规划 (Review Matrix Planning):
+   - 自动生成 reviews/00_全书书评创作矩阵规划.md，为全书定制 4~6 篇差异化高赞选题。
+2. 主题 Slug 语义化命名 (Semantic Slug Naming):
+   - 产出文件带主题 Slug: review_{platform}_{slug}_{timestamp}.md
+3. 四段心流积木自由搭配菜单 (Flow Modular Menu):
+   - 供创作者自由挑选题材与心流路径 (flow_menu_{timestamp}.md)。
+4. 双文件分离交付 (Dual-file Delivery):
+   - 纯净平台排版正文 (.md) + 独立血统溯源与联系图谱 (_provenance.md)
 """
 
 import os
@@ -14,7 +18,18 @@ import re
 import argparse
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
+
+
+def slugify_topic(topic: Optional[str]) -> str:
+    """
+    将主题转化为安全规范的文件名 Slug（去除特殊符号，保留中英文字符与下划线）
+    """
+    if not topic:
+        return "顿悟时刻"
+    clean = re.sub(r'[^\w\u4e00-\u9fff\-]+', '_', topic.strip())
+    clean = re.sub(r'_+', '_', clean).strip('_')
+    return clean[:30] if clean else "顿悟时刻"
 
 
 def collect_insights_material(book_dir: Path, topic_keyword: Optional[str] = None) -> Dict[str, List[str]]:
@@ -37,18 +52,31 @@ def collect_insights_material(book_dir: Path, topic_keyword: Optional[str] = Non
     quotes_file = insights_dir / "00_全书高穿透金句大全.md"
     if quotes_file.exists():
         text = quotes_file.read_text(encoding="utf-8")
-        quotes = [line.strip("> ") for line in text.splitlines() if line.startswith("> ") and len(line) > 10]
-        if topic_keyword:
-            matched = [q for q in quotes if topic_keyword in q]
-            quotes = matched if matched else quotes
-        materials["quotes"] = quotes[:6]
+        zh_quotes = re.findall(r"-\s+\*\*中文\*\*：(.*?)(?:\n|$)", text)
+        if zh_quotes:
+            if topic_keyword:
+                matched = [q.strip() for q in zh_quotes if topic_keyword in q]
+                materials["quotes"] = matched if matched else [q.strip() for q in zh_quotes[:6]]
+            else:
+                materials["quotes"] = [q.strip() for q in zh_quotes[:6]]
+        else:
+            quotes = [line.strip("> ") for line in text.splitlines() if line.startswith("> ") and len(line) > 10 and not line.startswith("> 精选")]
+            materials["quotes"] = quotes[:6]
 
     # 2. 扫描选题与反直觉
     hooks_file = insights_dir / "00_全书爆款选题与反直觉库.md"
     if hooks_file.exists():
         text = hooks_file.read_text(encoding="utf-8")
-        hooks = [line.strip("- ") for line in text.splitlines() if "反直觉" in line or "打破" in line or line.startswith("- ⚡️")]
-        materials["hooks"] = hooks[:6]
+        titles = re.findall(r"-\s+\*\*爆款大标题\*\*：《(.*?)》", text)
+        contrarians = re.findall(r"-\s+\*\*核心认知差\*\*：(.*?)(?:\n|$)", text)
+        parsed_hooks = []
+        for t, c in zip(titles, contrarians):
+            parsed_hooks.append(f"{t.strip()}（反直觉：{c.strip()}）")
+        if parsed_hooks:
+            materials["hooks"] = parsed_hooks[:6]
+        else:
+            hooks = [line.strip("- ") for line in text.splitlines() if "反直觉" in line or "打破" in line or line.startswith("- ⚡️")]
+            materials["hooks"] = hooks[:6]
         
     # 3. 扫描痛点
     symptom_file = insights_dir / "00_读者现实痛点与对号入座索引.md"
@@ -62,14 +90,66 @@ def collect_insights_material(book_dir: Path, topic_keyword: Optional[str] = Non
     if concepts_file.exists():
         text = concepts_file.read_text(encoding="utf-8")
         concepts = re.findall(r"\[\[(.*?)\]\]", text)
-        materials["concepts"] = list(set(concepts))[:6]
+        clean_concepts = [c for c in concepts if not c.endswith(".md")]
+        materials["concepts"] = list(dict.fromkeys(clean_concepts))[:6]
         
     return materials
 
 
+def generate_review_matrix(book_dir: Path) -> Path:
+    """
+    为整本书生成多篇书评创作矩阵规划表 (00_全书书评创作矩阵规划.md)
+    """
+    reviews_dir = book_dir / "reviews"
+    reviews_dir.mkdir(parents=True, exist_ok=True)
+    
+    matrix_file = reviews_dir / "00_全书书评创作矩阵规划.md"
+    book_title = book_dir.name
+    materials = collect_insights_material(book_dir)
+    
+    h1 = materials["hooks"][0] if len(materials["hooks"]) > 0 else "打破惯性盲区：越是努力，反而越容易陷入认知死角"
+    h2 = materials["hooks"][1] if len(materials["hooks"]) > 1 else "努力方向颠倒：我们不是能力差，而是目标设定机制错了"
+    h3 = materials["hooks"][2] if len(materials["hooks"]) > 2 else "为什么很多人每天都在疲于奔命，却始终没有安全感？"
+    h4 = materials["hooks"][3] if len(materials["hooks"]) > 3 else "真正厉害的人，如何建立最小阻力的生活秩序？"
+    
+    s1 = materials["symptoms"][0] if len(materials["symptoms"]) > 0 else "陷入盲目努力与深度精神内耗"
+    s2 = materials["symptoms"][1] if len(materials["symptoms"]) > 1 else "经常陷入自我怀疑与讨好型人格"
+    s3 = materials["symptoms"][2] if len(materials["symptoms"]) > 2 else "执行力瘫痪，计划永远停留在明天"
+    s4 = materials["symptoms"][3] if len(materials["symptoms"]) > 3 else "目标模糊，对未来充满不确定性恐惧"
+    
+    c1 = materials["concepts"][0] if len(materials["concepts"]) > 0 else "反思闭环与机器思维"
+    c2 = materials["concepts"][1] if len(materials["concepts"]) > 1 else "第一性原理与现实主义"
+    c3 = materials["concepts"][2] if len(materials["concepts"]) > 2 else "阻抗最小路径"
+    c4 = materials["concepts"][3] if len(materials["concepts"]) > 3 else "情绪与理性双轨机制"
+    
+    with open(matrix_file, "w", encoding="utf-8") as f:
+        f.write(f"# 🗺️ 《{book_title}》全书书评创作矩阵规划表\n\n")
+        f.write("> 本规划表基于全书 4D 黄金原料与核心模型，拆解出 4 篇针对不同平台与生活痛点的高穿透选题。\n\n")
+        f.write(f"- **书籍名称**：{book_title}\n")
+        f.write(f"- **规划生成时间**：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        f.write("---\n\n")
+        f.write("## 📑 四大核心发帖选题矩阵\n\n")
+        f.write("| 序号 | 选题大标题 | 目标平台 | 读者切入痛点 (Hook) | 核心思维模型 | 推荐四段心流组合 | 创作状态 |\n")
+        f.write("| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n")
+        f.write(f"| **01** | 《读完《{book_title}》，我终于戒掉了那该死的内耗》 | 小红书 (图文) | {s1} | [[{c1}]] | `1B + 2A + 3A + 4A` | 待创作 |\n")
+        f.write(f"| **02** | 《你不是意志力差，你只是努力方向从一开始就反了》 | Threads / X | {s2} | [[{c2}]] | `1A + 2B + 3B + 4B` | 待创作 |\n")
+        f.write(f"| **03** | 《写给经常自我怀疑的朋友：如何看清现实的底层规律》 | 公众号 (长随笔) | {s3} | [[{c3}]] | `1C + 2C + 3C + 4A` | 待创作 |\n")
+        f.write(f"| **04** | 《真正厉害的人，早就悄悄换掉了这套思维操作系统》 | 小红书 / 博客 | {s4} | [[{c4}]] | `1B + 2C + 3A + 4B` | 待创作 |\n\n")
+        f.write("---\n\n")
+        f.write("### 💡 选题矩阵布局策略说明：\n")
+        f.write("1. **篇 01（引流情绪向）**：从小红书高频情感共鸣切入，用反常识撕开内耗遮羞布，驱动高赞与收藏。\n")
+        f.write("2. **篇 02（认知觉醒向）**：以 Threads 串帖形式，直击讨好与低效努力痛点，给读者认知松绑。\n")
+        f.write("3. **篇 03（深度沉淀向）**：以公众号深夜随笔长文，促膝长谈，深度解构思维模型，建立信任感。\n")
+        f.write("4. **篇 04（工具实操向）**：强调最小阻力行动法则，给极简微清单，适合多平台分发。\n")
+        
+    print(f"✨ 成功生成全书书评创作矩阵规划表！")
+    print(f"🗺️ 规划文件: {matrix_file}")
+    return matrix_file
+
+
 def generate_flow_menu(book_dir: Path, topic: Optional[str] = None) -> Path:
     """
-    生成四段心流积木自由搭配菜单文件 (flow_menu.md)
+    生成四段心流积木自由搭配菜单文件 (flow_menu_{timestamp}.md)
     """
     reviews_dir = book_dir / "reviews"
     reviews_dir.mkdir(parents=True, exist_ok=True)
@@ -100,7 +180,7 @@ def generate_flow_menu(book_dir: Path, topic: Optional[str] = None) -> Path:
         f.write(f"# 🧩 《{book_title}》四段心流自由搭配菜单 (Flow Modular Menu)\n\n")
         f.write(f"> 可以在以下四段心流中各选一项（如组合 `1B + 2A + 3A + 4A`），随后吩咐 AI 依据所选组合编写文章！\n\n")
         f.write(f"- **书籍名称**：{book_title}\n")
-        f.write(f"- **主题偏向**：{topic if topic else '全书精华自由拼配'}\n")
+        f.write(f"- **探讨主题**：{topic if topic else '全书精华自由拼配'}\n")
         f.write(f"- **生成时间**：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write("---\n\n")
         
@@ -141,18 +221,20 @@ def create_dual_review_files(
     flow_combo: str = "1B+2A+3A+4A",
     topic: Optional[str] = None,
     chapter_file: Optional[str] = None
-) -> tuple[Path, Path]:
+) -> Tuple[Path, Path]:
     """
     根据选定心流生成双文件：
-    1. 纯净正文 review_{platform}_{timestamp}.md
-    2. 独立血统溯源 review_{platform}_{timestamp}_provenance.md
+    1. 纯净正文 review_{platform}_{slug}_{timestamp}.md
+    2. 独立血统溯源 review_{platform}_{slug}_{timestamp}_provenance.md
     """
     reviews_dir = book_dir / "reviews"
     reviews_dir.mkdir(parents=True, exist_ok=True)
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    clean_file = reviews_dir / f"review_{platform}_{timestamp}.md"
-    prov_file = reviews_dir / f"review_{platform}_{timestamp}_provenance.md"
+    topic_slug = slugify_topic(topic)
+    
+    clean_file = reviews_dir / f"review_{platform}_{topic_slug}_{timestamp}.md"
+    prov_file = reviews_dir / f"review_{platform}_{topic_slug}_{timestamp}_provenance.md"
     
     book_title = book_dir.name
     materials = collect_insights_material(book_dir, topic_keyword=topic)
@@ -200,7 +282,7 @@ def create_dual_review_files(
             f.write(f"# 《{book_title}》：你不是能力不够，你只是从未真正看清现实\n\n")
             f.write(f"文 / 读书人\n\n")
             f.write(f"前几天深夜整理书架的时候，重新翻开了《{book_title}》。\n\n")
-            f.write(f"很长一段时间里，很多人都在面临一种隐秘的消耗：明明每天都在拼命努力，却始终感觉内心空空落落。\n\n")
+            f.write("很长一段时间里，很多人都在面临一种隐秘的消耗：明明每天都在拼命努力，却始终感觉内心空空落落。\n\n")
             f.write(f"直到看到书中关于 [[{concept_sample}]] 的论述，才突然明白，真正的成长从来不是逼自己脱胎换骨，而是学会看清真实的规律。\n\n")
             f.write(f"> 「{quote_sample}」\n\n")
             f.write("（此处展开具体生活场景与思维模型的深度解构随笔……）\n\n")
@@ -212,6 +294,7 @@ def create_dual_review_files(
         f.write(f"# 🧬 《{book_title}》书评完整血统溯源与联系图谱\n\n")
         f.write(f"- **目标平台**：{platform.upper()}\n")
         f.write(f"- **对应正文**：[{clean_file.name}](./{clean_file.name})\n")
+        f.write(f"- **文章主题**：{topic_display}\n")
         f.write(f"- **采用心流组合**：`{flow_combo}`\n")
         f.write(f"- **生成时间**：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write("---\n\n")
@@ -249,14 +332,14 @@ def create_dual_review_files(
         f.write(f"- [[{concept_sample}]]\n")
         f.write(f"- [[{book_title}]]\n")
         
-    print(f"✨ 成功生成双文件：")
+    print(f"✨ 成功生成语义化双文件：")
     print(f"   1. 纯净正文: {clean_file}")
     print(f"   2. 独立溯源: {prov_file}")
     return clean_file, prov_file
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Book Distiller 读后感与心流共创生成器 (v2.9)")
+    parser = argparse.ArgumentParser(description="Book Distiller 读后感与心流共创生成器 (v3.0 创作者矩阵版)")
     parser.add_argument("book_dir", help="已提取章节的书籍目录")
     parser.add_argument(
         "--platform",
@@ -264,8 +347,9 @@ def main():
         default="xhs",
         help="目标平台: xhs(小红书), threads(Threads), wechat(公众号), menu_only(仅生成心流搭配菜单)"
     )
+    parser.add_argument("--matrix", action="store_true", help="为整本书生成 4~6 篇书评创作矩阵规划表 (00_全书书评创作矩阵规划.md)")
     parser.add_argument("--combo", default="1B+2A+3A+4A", help="指定四段心流组合代号 (如 1A+2B+3A+4A)")
-    parser.add_argument("--topic", help="探讨主题或痛点", default=None)
+    parser.add_argument("--topic", help="探讨主题或痛点（会自动转换为语义化文件名 Slug）", default=None)
     parser.add_argument("--chapter", help="指定关联合并的章节文件名", default=None)
     
     args = parser.parse_args()
@@ -275,14 +359,18 @@ def main():
         print(f"错误: 找不到书籍目录 -> {book_path}", file=sys.stderr)
         sys.exit(1)
         
-    # 首先生成四段心流自由搭配菜单
+    # 1. 若指定 --matrix，则生成全书创作矩阵规划表
+    if args.matrix:
+        generate_review_matrix(book_path)
+        
+    # 2. 生成四段心流自由搭配菜单
     menu_file = generate_flow_menu(book_path, topic=args.topic)
     
     if args.platform == "menu_only":
         print(f"\n🎉 心流菜单已就绪，可以在 {menu_file.name} 中挑选中意的心流组合！")
         return
         
-    # 生成正文与独立溯源文件
+    # 3. 生成语义化双文件
     create_dual_review_files(
         book_path,
         platform=args.platform,
