@@ -78,20 +78,24 @@ def collect_insights_material(book_dir: Path, topic_keyword: Optional[str] = Non
             hooks = [line.strip("- ") for line in text.splitlines() if "反直觉" in line or "打破" in line or line.startswith("- ⚡️")]
             materials["hooks"] = hooks[:6]
         
-    # 3. 扫描痛点
+    # 3. 扫描痛点（精准提取读者真实疑问句，过滤表格格式符号）
     symptom_file = insights_dir / "00_读者现实痛点与对号入座索引.md"
     if symptom_file.exists():
         text = symptom_file.read_text(encoding="utf-8")
-        symptoms = [line.strip("| ") for line in text.splitlines() if "|" in line and "现实痛点" not in line and "---" not in line]
-        materials["symptoms"] = symptoms[:6]
+        symptom_matches = re.findall(r"\|\s+\*\*“([^”]+)”\*\*", text)
+        if symptom_matches:
+            materials["symptoms"] = [s.strip() for s in symptom_matches[:8]]
+        else:
+            symptoms = [line.split("|")[1].strip().strip("*“ ”") for line in text.splitlines() if "|" in line and "现实痛点" not in line and "---" not in line and len(line.split("|")) > 2]
+            materials["symptoms"] = symptoms[:6]
 
     # 4. 扫描思维模型
     concepts_file = insights_dir / "00_全书核心概念与思维模型图谱.md"
     if concepts_file.exists():
         text = concepts_file.read_text(encoding="utf-8")
         concepts = re.findall(r"\[\[(.*?)\]\]", text)
-        clean_concepts = [c for c in concepts if not c.endswith(".md")]
-        materials["concepts"] = list(dict.fromkeys(clean_concepts))[:6]
+        clean_concepts = [c for c in concepts if not c.endswith(".md") and len(c) < 25]
+        materials["concepts"] = list(dict.fromkeys(clean_concepts))[:8]
         
     return materials
 
@@ -105,37 +109,50 @@ def generate_review_matrix(book_dir: Path) -> Path:
     
     matrix_file = reviews_dir / "00_全书书评创作矩阵规划.md"
     book_title = book_dir.name
+    book_display_title = book_title.replace("_", " ")
     materials = collect_insights_material(book_dir)
     
-    h1 = materials["hooks"][0] if len(materials["hooks"]) > 0 else "打破惯性盲区：越是努力，反而越容易陷入认知死角"
-    h2 = materials["hooks"][1] if len(materials["hooks"]) > 1 else "努力方向颠倒：我们不是能力差，而是目标设定机制错了"
-    h3 = materials["hooks"][2] if len(materials["hooks"]) > 2 else "为什么很多人每天都在疲于奔命，却始终没有安全感？"
-    h4 = materials["hooks"][3] if len(materials["hooks"]) > 3 else "真正厉害的人，如何建立最小阻力的生活秩序？"
-    
-    s1 = materials["symptoms"][0] if len(materials["symptoms"]) > 0 else "陷入盲目努力与深度精神内耗"
-    s2 = materials["symptoms"][1] if len(materials["symptoms"]) > 1 else "经常陷入自我怀疑与讨好型人格"
-    s3 = materials["symptoms"][2] if len(materials["symptoms"]) > 2 else "执行力瘫痪，计划永远停留在明天"
-    s4 = materials["symptoms"][3] if len(materials["symptoms"]) > 3 else "目标模糊，对未来充满不确定性恐惧"
-    
-    c1 = materials["concepts"][0] if len(materials["concepts"]) > 0 else "反思闭环与机器思维"
-    c2 = materials["concepts"][1] if len(materials["concepts"]) > 1 else "第一性原理与现实主义"
-    c3 = materials["concepts"][2] if len(materials["concepts"]) > 2 else "阻抗最小路径"
-    c4 = materials["concepts"][3] if len(materials["concepts"]) > 3 else "情绪与理性双轨机制"
-    
+    # 尝试从选题库提取具体的 Top 选题信息
+    hooks_file = book_dir / "insights" / "00_全书爆款选题与反直觉库.md"
+    custom_rows = []
+    if hooks_file.exists():
+        htext = hooks_file.read_text(encoding="utf-8")
+        top_matches = re.findall(r"###\s+[🥇🥈🥉🏅].*?-\s+\*\*爆款大标题\*\*：《(.*?)》.*?-\s+\*\*痛点与情绪\*\*：(.*?)(?:\n|$).*?-\s+\*\*核心认知差\*\*：(.*?)(?:\n|$)", htext, re.DOTALL)
+        if top_matches:
+            platforms = ["小红书 (图文)", "Threads / X (串帖)", "微信公众号 (深度随笔)", "小红书 / 博客 (思维破局)", "深度长文 (人生终局)"]
+            combos = ["`1A + 2B + 3A + 4A`", "`1B + 2A + 3C + 4B`", "`1C + 2C + 3B + 4A`", "`1B + 2B + 3A + 4B`", "`1A + 2C + 3C + 4C`"]
+            for idx, (t, p, c) in enumerate(top_matches[:5]):
+                plat = platforms[idx % len(platforms)]
+                combo = combos[idx % len(combos)]
+                concept_tag = f"[[{materials['concepts'][idx % len(materials['concepts'])]}]]" if materials["concepts"] else "[[核心模型]]"
+                custom_rows.append(f"| **0{idx+1}** | 《{t.strip()}》 | {plat} | {p.strip()[:35]}... | {concept_tag} | {combo} | 待创作 |")
+
     with open(matrix_file, "w", encoding="utf-8") as f:
-        f.write(f"# 🗺️ 《{book_title}》全书书评创作矩阵规划表\n\n")
-        f.write("> 本规划表基于全书 4D 黄金原料与核心模型，拆解出 4 篇针对不同平台与生活痛点的高穿透选题。\n\n")
-        f.write(f"- **书籍名称**：{book_title}\n")
+        f.write(f"# 🗺️ 《{book_display_title}》全书书评创作矩阵规划表\n\n")
+        f.write("> 本规划表基于全书 4D 黄金原料与核心模型，拆解出针对不同平台与生活痛点的高穿透矩阵选题。\n\n")
+        f.write(f"- **书籍名称**：{book_display_title}\n")
         f.write(f"- **规划生成时间**：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write("---\n\n")
-        f.write("## 📑 四大核心发帖选题矩阵\n\n")
+        f.write("## 📑 核心发帖选题矩阵\n\n")
         f.write("| 序号 | 选题大标题 | 目标平台 | 读者切入痛点 (Hook) | 核心思维模型 | 推荐四段心流组合 | 创作状态 |\n")
         f.write("| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n")
-        f.write(f"| **01** | 《读完《{book_title}》，我终于戒掉了那该死的内耗》 | 小红书 (图文) | {s1} | [[{c1}]] | `1B + 2A + 3A + 4A` | 待创作 |\n")
-        f.write(f"| **02** | 《你不是意志力差，你只是努力方向从一开始就反了》 | Threads / X | {s2} | [[{c2}]] | `1A + 2B + 3B + 4B` | 待创作 |\n")
-        f.write(f"| **03** | 《写给经常自我怀疑的朋友：如何看清现实的底层规律》 | 公众号 (长随笔) | {s3} | [[{c3}]] | `1C + 2C + 3C + 4A` | 待创作 |\n")
-        f.write(f"| **04** | 《真正厉害的人，早就悄悄换掉了这套思维操作系统》 | 小红书 / 博客 | {s4} | [[{c4}]] | `1B + 2C + 3A + 4B` | 待创作 |\n\n")
-        f.write("---\n\n")
+        if custom_rows:
+            for row in custom_rows:
+                f.write(f"{row}\n")
+        else:
+            s1 = materials["symptoms"][0] if materials["symptoms"] else "深陷内耗与无效努力"
+            s2 = materials["symptoms"][1] if len(materials["symptoms"]) > 1 else "讨好型人格与不敢拒绝"
+            s3 = materials["symptoms"][2] if len(materials["symptoms"]) > 2 else "执行力瘫痪与目标迷茫"
+            s4 = materials["symptoms"][3] if len(materials["symptoms"]) > 3 else "缺乏时间主权与精力透支"
+            c1 = materials["concepts"][0] if materials["concepts"] else "核心概念A"
+            c2 = materials["concepts"][1] if len(materials["concepts"]) > 1 else "核心概念B"
+            c3 = materials["concepts"][2] if len(materials["concepts"]) > 2 else "核心概念C"
+            c4 = materials["concepts"][3] if len(materials["concepts"]) > 3 else "核心概念D"
+            f.write(f"| **01** | 《读完《{book_display_title}》，我终于戒掉了那该死的内耗》 | 小红书 (图文) | {s1} | [[{c1}]] | `1B + 2A + 3A + 4A` | 待创作 |\n")
+            f.write(f"| **02** | 《你不是意志力差，你只是努力方向从一开始就反了》 | Threads / X | {s2} | [[{c2}]] | `1A + 2B + 3B + 4B` | 待创作 |\n")
+            f.write(f"| **03** | 《写给经常自我怀疑的朋友：如何看清现实的底层规律》 | 公众号 (长随笔) | {s3} | [[{c3}]] | `1C + 2C + 3C + 4A` | 待创作 |\n")
+            f.write(f"| **04** | 《真正厉害的人，早就悄悄换掉了这套思维操作系统》 | 小红书 / 博客 | {s4} | [[{c4}]] | `1B + 2C + 3A + 4B` | 待创作 |\n")
+        f.write("\n---\n\n")
         f.write("### 💡 选题矩阵布局策略说明：\n")
         f.write("1. **篇 01（引流情绪向）**：从小红书高频情感共鸣切入，用反常识撕开内耗遮羞布，驱动高赞与收藏。\n")
         f.write("2. **篇 02（认知觉醒向）**：以 Threads 串帖形式，直击讨好与低效努力痛点，给读者认知松绑。\n")

@@ -1,13 +1,13 @@
 ---
 name: book-distiller
-description: Book Distiller (书籍蒸馏器) - 电子书章节拆解、黄金原料萃取与多平台书评创作引擎。将 EPUB 电子书按章节精确提取并切分为单层平铺的独立 Markdown 文档。支持挂载子技能（extract-insights 提取 4 类写作黄金原料、断点续传与增量合并；book-review 提供"全书书评创作矩阵规划"、"四段心流自由搭配菜单"与"语义化主题 Slug 命名"，并输出独立血统溯源图谱）。智能过滤版权与无意义杂质、自动注入 YAML Frontmatter、章节翻页导航、配图提取，并生成 README.md 和 SUMMARY.md 索引目录。当用户提到"book-distiller"、"书籍蒸馏"、"提取epub"、"epub转markdown"、"书评矩阵"、"挑选心流"、"四段心流"、"写读后感"、"小红书书评"、"血统溯源"等需求时触发。
+description: Book Distiller (书籍蒸馏器) - 电子书章节拆解、黄金原料萃取与多平台书评创作引擎。将 EPUB 电子书按章节精确提取并切分为单层平铺的独立 Markdown 文档。支持挂载子技能（extract-insights 提取 4 类写作黄金原料、全书一页纸决策简报、断点续传与增量合并；book-review 提供"全书书评创作矩阵规划"、"四段心流自由搭配菜单"与"语义化主题 Slug 命名"，并输出独立血统溯源图谱）。智能过滤版权与无意义杂质、自动注入 YAML Frontmatter、章节翻页导航、配图提取，并生成 README.md 和 SUMMARY.md 索引目录。当用户提到"book-distiller"、"书籍蒸馏"、"提取epub"、"epub转markdown"、"一页纸简报"、"书评矩阵"、"挑选心流"、"四段心流"、"写读后感"、"小红书书评"、"血统溯源"等需求时触发。
 ---
 
-# Book Distiller (书籍蒸馏器 v3.0 创作者矩阵终极版)
+# Book Distiller (书籍蒸馏器 v3.1 全书决策简报与矩阵创作版)
 
-**从电子书章节拆解、黄金原料萃取到全书书评创作矩阵与四段心流自由搭配的一体化引擎。**
+**从电子书章节拆解、黄金原料萃取、全书一页纸决策简报到多平台书评创作矩阵的一体化引擎。**
 
-将 EPUB 电子书按章节结构自动解包、清洗，并转成一套规范的单层平铺独立 Markdown 知识库；向下游串联完整的创作者流水线，实现从**书籍切分 ➔ 4D黄金原料挖掘(断点续传) ➔ 全书书评创作矩阵 ➔ 四段心流积木自由搭配 ➔ 语义化 Slug 纯净正文与独立溯源图谱**的完整闭环。
+将 EPUB 电子书按章节结构自动解包、清洗，并转成一套规范的单层平铺独立 Markdown 知识库；向下游串联完整的创作者流水线，实现从**书籍切分 ➔ 4D黄金原料挖掘(断点续传) ➔ 00_全书一页纸决策简报 ➔ 全书书评创作矩阵 ➔ 四段心流积木自由搭配 ➔ 语义化 Slug 纯净正文与独立溯源图谱**的完整闭环。
 
 ---
 
@@ -30,6 +30,7 @@ flowchart TD
     EPUB[原始 EPUB 电子书] --> Main[Book Distiller 核心引擎]
     Main --> Chapters[单层平铺章节 Markdown]
     Chapters --> S1[Sub-skill: extract-insights]
+    S1 --> Brief[📑 00_全书一页纸决策简报.md]
     S1 --> Insights[insights/ 四大黄金原料总库 (断点续传)]
     Insights --> S2[Sub-skill: book-review]
     Chapters --> S2
@@ -40,27 +41,22 @@ flowchart TD
     Selection --> Provenance[🧬 独立血统溯源 review_platform_slug_provenance.md]
 ```
 
-### 1. `extract-insights` (4+2 黄金原料提取 · 断点续传版)
-- **定位**：拒绝无意义的全文大意总结，专门从切分好的章节中挖掘自媒体与长文创作的 4 类黄金原料：
-  - ⚡️ **反直觉认知 (Hook 灵感)**：打破常识误区，提炼 3 种爆款钩子（含 ⭐⭐⭐⭐⭐ 爆款评级）。
-  - 📖 **故事与微案例 (论据素材)**：具象人物冲突与破局案例。
-  - 🛠️ **可落地微清单 (读者收藏向)**：三步流程法与避坑红线。
-  - 💎 **高穿透金句 (社交配图)**：情绪共鸣强烈的金句与适用语境。
-  - 🎯 **读者痛点对号入座**：直击现实烦恼的病症映射索引。
-  - 🧠 **概念双链图谱**：Obsidian `[[概念双链]]` 网状知识网络。
-  - 🔄 **断点续传与增量合并**：自动跳过已完成章节，支持 `--sync` 一键去重汇聚更新四大总库。
+### 1. `extract-insights` (4+2 黄金原料提取 · 一页纸决策简报版)
+- **📑 00_全书一页纸决策简报 (1-Page Executive Summary)**：
+  - 📌 一句话本质判词（表面聊什么 vs 底层本质重构了什么）；
+  - ⚡️ 三大最具穿透力的反常识断言；
+  - 🧠 作者底层逻辑推导闭环（Mermaid 架构流程图）；
+  - 🎯 读者适合度诊断（谁该立刻读 vs 谁读了是浪费时间）；
+  - 💎 全书灵魂锚点金句与自媒体发帖行动指引。
+- **4+2 黄金原料提取**：反直觉认知(带爆款打分)、故事微案例、落地微清单、穿透金句、痛点映射、Obsidian 概念双链。
+- **断点续传与增量合并**：自动跳过已完成章节，支持 `--sync` 一键去重汇聚更新四大总库与决策简报。
 
 ### 2. `book-review` (全书书评矩阵 · 四段心流自由拼配)
-- **定位**：创作者主导的矩阵化人机共创工坊。
 - **🗺️ 全书书评创作矩阵 (Review Matrix)**：一键规划全书 4~6 篇差异化发帖选题（引流爆款篇、认知觉醒篇、深度长文篇、工具实操篇）。
-- **🧩 四段心流自由搭配菜单 (Flow Modular Menu)**：
-  - **阶段 1：【Hook / 痛点引子】**（1A 扎心情境型 / 1B 认知打脸型 / 1C 灵魂发问型）
-  - **阶段 2：【Inversion / 认知反转】**（2A 底层系统归因 / 2B 动机真相剖析 / 2C 视角升维置换）
-  - **阶段 3：【Action / 极简解法】**（3A 微习惯切片法 / 3B 阻断红线法则 / 3C 三步闭环落地）
-  - **阶段 4：【Ending / 灵魂收尾】**（4A 温暖托举祝福 / 4B 极简警醒金句 / 4C 开放留白共勉）
+- **🧩 四段心流自由搭配菜单 (Flow Modular Menu)**：Hook痛点 / 认知反转 / 极简解法 / 灵魂收尾。
 - **🏷️ 语义化主题 Slug 双文件分离交付**：
-  - `review_{platform}_{slug}_{timestamp}.md`：100% 纯净可发布正文，带语义化主题 Slug，易于检索。
-  - `review_{platform}_{slug}_{timestamp}_provenance.md`：独立血统溯源档案、Mermaid 演化图谱与 Obsidian 概念双链。
+  - 纯净正文：`review_{platform}_{slug}_{timestamp}.md`
+  - 独立溯源图谱：`review_{platform}_{slug}_{timestamp}_provenance.md`
 
 ---
 
@@ -70,7 +66,7 @@ flowchart TD
 # 1. 主流程：标准平铺纯净提取 EPUB 电子书
 ~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/book-distiller/scripts/extract_chapters.py "<EPUB_FILE_PATH>" -o "<OUTPUT_DIR>"
 
-# 2. 为已提取的书籍搭建写作原料库骨架 (extract-insights，支持断点续传)
+# 2. 为已提取的书籍搭建写作原料库并生成全书一页纸决策简报 (extract-insights)
 ~/.agent-reach-venv/bin/python3 ~/.gemini/config/skills/book-distiller/scripts/extract_insights.py "<BOOK_DIR>"
 
 # 3. 为整本书生成书评创作矩阵规划 (book-review)
@@ -86,6 +82,7 @@ flowchart TD
 输出目录/
 ├── README.md                                                 # 书籍元数据与完整正文平铺清单
 ├── SUMMARY.md                                                # 导航树索引
+├── 00_全书一页纸决策简报.md                                    # 👈 3分钟俯瞰全书破局逻辑与反常识断言
 ├── assets/                                                   # 提取出的全部插图、封面
 ├── 01_导论.md
 ├── 02_第一部_我的历程_探索.md
